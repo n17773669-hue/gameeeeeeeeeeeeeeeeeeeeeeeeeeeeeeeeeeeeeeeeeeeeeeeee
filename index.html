@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JJK Battle - Prototype</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body { background: #08080a; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; height: 100vh; }
+        
+        /* OVERLAY CONTAINER */
+        .overlay { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; background: rgba(5,5,8,0.85); backdrop-filter: blur(10px); z-index: 100; transition: opacity 0.5s; }
+        .hidden { display: none !important; }
+
+        /* FORM DANG NHAP */
+        .card { background: #12131a; border: 1px solid #2a2c3d; padding: 30px; border-radius: 16px; width: 360px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .card h2 { font-size: 24px; margin-bottom: 20px; color: #00ffcc; letter-spacing: 2px; text-transform: uppercase; }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group label { display: block; font-size: 12px; color: #888; margin-bottom: 5px; }
+        .input-group input { width: 100%; padding: 12px; background: #090a0f; border: 1px solid #2a2c3d; border-radius: 8px; color: #fff; outline: none; }
+        .btn { width: 100%; padding: 12px; background: linear-gradient(45deg, #00ffcc, #0099ff); border: none; border-radius: 8px; color: #000; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        .btn:hover { transform: translateY(-2px); filter: brightness(1.2); }
+
+        /* MENU CHON SKIN */
+        .skin-menu { display: flex; gap: 20px; background: #12131a; padding: 25px; border-radius: 16px; border: 1px solid #2a2c3d; }
+        .skin-preview-box { width: 180px; height: 220px; background: #090a0f; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px dashed #3a3d54; }
+        .skin-preview-avatar { width: 65px; height: 110px; position: relative; }
+        .skin-list { display: flex; flex-direction: column; gap: 10px; width: 200px; }
+        .skin-item { padding: 10px; background: #1a1c26; border: 1px solid #2a2c3d; border-radius: 8px; cursor: pointer; text-align: left; transition: 0.2s; }
+        .skin-item:hover, .skin-item.active { border-color: #00ffcc; background: #222533; }
+        .skin-item span { display: block; font-size: 10px; color: #ffcc00; margin-top: 3px; }
+
+        /* HUD IN-GAME */
+        #ui-layer { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+        .stats-bar { position: absolute; top: 20px; left: 20px; background: rgba(18, 19, 26, 0.7); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); width: 280px; }
+        .player-name { font-weight: bold; margin-bottom: 8px; color: #00ffcc; display: flex; justify-content: space-between; }
+        .bar-container { background: #000; height: 14px; border-radius: 7px; overflow: hidden; margin-bottom: 6px; border: 1px solid #333; }
+        .hp-fill { background: linear-gradient(90deg, #ff3366, #ff6600); width: 100%; height: 100%; transition: width 0.3s; }
+        .stamina-fill { background: linear-gradient(90deg, #00ffcc, #0099ff); width: 100%; height: 100%; }
+
+        /* CONTROLS HINT */
+        .controls-hint { position: absolute; bottom: 20px; left: 20px; font-size: 12px; color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.5); padding: 8px 12px; border-radius: 6px; }
+
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. MAN HINH DANG NHAP -->
+    <div id="login-screen" class="overlay">
+        <div class="card">
+            <h2>JJK BATTLE</h2>
+            <div class="input-group">
+                <label>TÊN NHÂN VẬT / OWNER</label>
+                <input type="text" id="username-input" placeholder="Nhập tên (Nhập Owner để nhận Headless)..." value="Dynamyx">
+            </div>
+            <button class="btn" onclick="goToSkinSelect()">TIẾP TỤC</button>
+        </div>
+    </div>
+
+    <!-- 2. MAN HINH CHON SKIN -->
+    <div id="skin-screen" class="overlay hidden">
+        <div class="skin-menu">
+            <div class="skin-preview-box">
+                <div id="skin-preview-avatar" class="skin-preview-avatar"></div>
+                <p id="skin-preview-name" style="margin-top: 15px; font-size: 13px; font-weight: bold;">Standard</p>
+            </div>
+            <div class="skin-list">
+                <h3 style="font-size: 14px; margin-bottom: 5px; color: #aaa;">KHO SKIN ROBLOX</h3>
+                <div class="skin-item active" onclick="selectSkin('default', 'Mặc định', '#00ffcc')">
+                    <strong>Đồng Phục Jujutsu</strong>
+                    <span>[Mặc định]</span>
+                </div>
+                <div class="skin-item" onclick="selectSkin('gojo', 'Thầy Gojo', '#9933ff')">
+                    <strong>Chú Thuật Sư Vô Cực</strong>
+                    <span>[Gojo Style]</span>
+                </div>
+                <div class="skin-item" onclick="selectSkin('headless', 'Owner Headless', '#ff0055')">
+                    <strong>Headless Owner</strong>
+                    <span>[Độc quyền Admin / Owner]</span>
+                </div>
+                <button class="btn" onclick="startGame()">VÀO CHIẾN TRƯỜNG</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. GIAO DIEN IN-GAME -->
+    <div id="ui-layer" class="hidden">
+        <div class="stats-bar">
+            <div class="player-name"><span id="hud-name">Player</span> <span id="hud-badge" style="font-size: 10px; color: #ffcc00;"></span></div>
+            <div class="bar-container"><div id="hp-bar" class="hp-fill"></div></div>
+            <div class="bar-container"><div id="stamina-bar" class="stamina-fill"></div></div>
+        </div>
+        <div class="controls-hint">
+            Di chuyển: <b>A / D</b> | Nhảy: <b>W / Space</b> | Lướt Nhanh (Dash): <b>Shift</b>
+        </div>
+    </div>
+
+    <!-- CANVAS CHAY GAME -->
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // THÔNG TIN NGƯỜI CHƠI & SKIN
+        let playerConfig = {
+            name: "Player",
+            skinId: "default",
+            color: "#00ffcc",
+            isHeadless: false,
+            isOwner: false
+        };
+
+        function goToSkinSelect() {
+            const inputVal = document.getElementById('username-input').value.trim();
+            if(!inputVal) return alert("Vui lòng nhập tên!");
+            
+            playerConfig.name = inputVal;
+            // Nếu đặt tên chứa từ "owner" hoặc "dynamyx" -> Tự động nhận skin Headless độc quyền
+            if(inputVal.toLowerCase().includes("owner") || inputVal.toLowerCase().includes("dynamyx")) {
+                playerConfig.isOwner = true;
+                selectSkin('headless', 'Owner Headless', '#ff0055');
+            }
+
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('skin-screen').classList.remove('hidden');
+            updatePreview();
+        }
+
+        function selectSkin(id, name, color) {
+            playerConfig.skinId = id;
+            playerConfig.color = color;
+            playerConfig.isHeadless = (id === 'headless');
+            
+            document.querySelectorAll('.skin-item').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            document.getElementById('skin-preview-name').innerText = name;
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const box = document.getElementById('skin-preview-avatar');
+            box.innerHTML = '';
+            
+            // Vẽ mô hình xem trước skin
+            const head = document.createElement('div');
+            head.style.cssText = `width:24px; height:24px; background:${playerConfig.isHeadless ? 'transparent' : '#ffcc99'}; border-radius:50%; margin: 0 auto; border: ${playerConfig.isHeadless ? 'none' : '2px solid #fff'};`;
+            
+            const body = document.createElement('div');
+            body.style.cssText = `width:30px; height:45px; background:${playerConfig.color}; border-radius:6px; margin: 4px auto 0; border:2px solid #fff;`;
+            
+            box.appendChild(head);
+            box.appendChild(body);
+        }
+
+        function startGame() {
+            document.getElementById('skin-screen').classList.add('hidden');
+            document.getElementById('ui-layer').classList.remove('hidden');
+            document.getElementById('hud-name').innerText = playerConfig.name;
+            if(playerConfig.isOwner) document.getElementById('hud-badge').innerText = "[OWNER VIP]";
+            
+            initGame();
+        }
+
+        // --- GAME ENGINE & MAP CHIẾN TRƯỜNG ---
+        let player, keys, mapObjects, particles;
+
+        function initGame() {
+            keys = {};
+            particles = [];
+            
+            player = {
+                x: canvas.width / 2,
+                y: canvas.height - 200,
+                vx: 0,
+                vy: 0,
+                width: 36,
+                height: 64,
+                grounded: false,
+                facing: 1, // 1: Phải, -1: Trái
+                animTime: 0,
+                isDashing: false,
+                dashCooldown: 0
+            };
+
+            // TẠO MAP CHIẾN TRƯỜNG CÂY CỐI ĐỘC ĐÁO (Bối cảnh rừng cổ thụ dạ quang)
+            mapObjects = {
+                groundY: canvas.height - 100,
+                trees: [
+                    { x: 150, size: 1.2, color: '#0d2b22' },
+                    { x: 450, size: 0.9, color: '#143d30' },
+                    { x: 850, size: 1.5, color: '#0a211a' },
+                    { x: 1200, size: 1.1, color: '#113328' }
+                ],
+                rocks: [
+                    { x: 300, w: 70, h: 40 },
+                    { x: 700, w: 100, h: 50 },
+                    { x: 1050, w: 80, h: 35 }
+                ]
+            };
+
+            window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+            window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function update() {
+            // Xử lý di chuyển & Hoạt ảnh
+            const speed = player.isDashing ? 12 : 5;
+            
+            if (keys['a'] || keys['arrowleft']) {
+                player.vx = -speed;
+                player.facing = -1;
+                player.animTime += 0.15;
+            } else if (keys['d'] || keys['arrowright']) {
+                player.vx = speed;
+                player.facing = 1;
+                player.animTime += 0.15;
+            } else {
+                player.vx *= 0.7; // Ma sát dừng lại mượt
+                player.animTime = 0;
+            }
+
+            // Nhảy
+            if ((keys['w'] || keys[' '] || keys['arrowup']) && player.grounded) {
+                player.vy = -14;
+                player.grounded = false;
+                createDashParticles(player.x, player.y + player.height, '#555');
+            }
+
+            // Lướt nhanh (Dash - Phím Shift)
+            if (keys['shift'] && player.dashCooldown <= 0) {
+                player.isDashing = true;
+                player.dashCooldown = 30; // Cooldown khung hình
+                createDashParticles(player.x, player.y + player.height/2, playerConfig.color);
+            }
+            if (player.dashCooldown > 0) {
+                player.dashCooldown--;
+                if(player.dashCooldown < 20) player.isDashing = false;
+            }
+
+            // Trọng lực
+            player.vy += 0.6;
+            player.x += player.vx;
+            player.y += player.vy;
+
+            // Đất nảy va chạm
+            if (player.y + player.height >= mapObjects.groundY) {
+                player.y = mapObjects.groundY - player.height;
+                player.vy = 0;
+                player.grounded = true;
+            }
+
+            // Cập nhật hiệu ứng hạt (Particles)
+            for(let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= 0.03;
+                if(p.alpha <= 0) particles.splice(i, 1);
+            }
+        }
+
+        function createDashParticles(x, y, color) {
+            for(let i=0; i<8; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    color: color,
+                    alpha: 1
+                });
+            }
+        }
+
+        function drawMap() {
+            // Nền trời đêm chiến trường
+            let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#05060a');
+            gradient.addColorStop(1, '#111522');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Vẽ Cây Cối Huyền Bí (Bối cảnh không đụng hàng)
+            mapObjects.trees.forEach(tree => {
+                ctx.save();
+                ctx.translate(tree.x, mapObjects.groundY);
+                // Thân cây
+                ctx.fillStyle = '#1c1512';
+                ctx.fillRect(-12 * tree.size, -120 * tree.size, 24 * tree.size, 120 * tree.size);
+                // Tán lá dạ quang phong cách JJK
+                ctx.fillStyle = tree.color;
+                ctx.beginPath();
+                ctx.arc(0, -140 * tree.size, 65 * tree.size, 0, Math.PI * 2);
+                ctx.fill();
+                // Đóm sáng trên cây
+                ctx.fillStyle = '#00ffcc';
+                ctx.globalAlpha = 0.4;
+                ctx.beginPath();
+                ctx.arc(-15 * tree.size, -150 * tree.size, 8 * tree.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // Vẽ Đá chiến trường
+            mapObjects.rocks.forEach(r => {
+                ctx.fillStyle = '#262938';
+                ctx.fillRect(r.x, mapObjects.groundY - r.h, r.w, r.h);
+                ctx.fillStyle = '#3b3f54';
+                ctx.fillRect(r.x, mapObjects.groundY - r.h, r.w, 6);
+            });
+
+            // Mặt đất
+            ctx.fillStyle = '#161824';
+            ctx.fillRect(0, mapObjects.groundY, canvas.width, canvas.height - mapObjects.groundY);
+            // Dải cỏ phát sáng
+            ctx.fillStyle = '#00ffcc';
+            ctx.fillRect(0, mapObjects.groundY, canvas.width, 3);
+        }
+
+        function drawPlayer() {
+            ctx.save();
+            ctx.translate(player.x + player.width/2, player.y + player.height/2);
+            
+            // Nghiêng người khi di chuyển (Hoạt ảnh mượt)
+            let tilt = player.vx * 0.05;
+            ctx.rotate(tilt);
+
+            // Hiệu ứng lướt bóng ma (Ghost Trail khi Dash)
+            if(player.isDashing) {
+                ctx.fillStyle = playerConfig.color;
+                ctx.globalAlpha = 0.4;
+                ctx.fillRect(-player.width/2 - player.facing*15, -player.height/2, player.width, player.height);
+            }
+
+            ctx.globalAlpha = 1;
+
+            // 1. VẼ THÂN (BODY)
+            ctx.fillStyle = playerConfig.color;
+            ctx.beginPath();
+            ctx.roundRect(-player.width/2, -player.height/2 + 20, player.width, player.height - 20, 6);
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // 2. VẼ ĐẦU (HEAD) - XỬ LÝ HEADLESS ĐỘC QUYỀN OWNER
+            if (!playerConfig.isHeadless) {
+                // Đầu bình thường
+                ctx.fillStyle = '#ffcc99';
+                ctx.beginPath();
+                ctx.arc(0, -player.height/2 + 8, 14, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                
+                // Mắt nhân vật
+                ctx.fillStyle = '#000';
+                ctx.fillRect(player.facing * 4, -player.height/2 + 6, 3, 5);
+            } else {
+                // Xử lý HEADLESS OWNER: Không vẽ đầu, chỉ có làn khói năng lượng ma mị
+                ctx.fillStyle = '#ff0055';
+                ctx.globalAlpha = 0.6;
+                ctx.beginPath();
+                ctx.arc(0, -player.height/2 + 10, 8 + Math.sin(Date.now() * 0.01)*3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 3. VẼ CHÂN (Hoạt ảnh bước đi - Leg Animation)
+            ctx.fillStyle = '#111';
+            let legOffset = Math.sin(player.animTime) * 10;
+            ctx.fillRect(-12, player.height/2 - 10, 8, 10 + (player.grounded ? legOffset : 0));
+            ctx.fillRect(4, player.height/2 - 10, 8, 10 - (player.grounded ? legOffset : 0));
+
+            ctx.restore();
+
+            // Tên hiển thị trên đầu
+            ctx.fillStyle = playerConfig.isOwner ? '#ffcc00' : '#fff';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(playerConfig.name, player.x + player.width/2, player.y - (playerConfig.isHeadless ? 10 : 25));
+        }
+
+        function drawParticles() {
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.alpha;
+                ctx.fillRect(p.x, p.y, 4, 4);
+            });
+            ctx.globalAlpha = 1;
+        }
+
+        function gameLoop() {
+            update();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawMap();
+            drawParticles();
+            drawPlayer();
+            requestAnimationFrame(gameLoop);
+        }
+    </script>
+</body>
+</html>

@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JJK Battle 3D - Modular</title>
+    <title>JJK Battle 3D - Epic Arena</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body { background: #050508; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; height: 100vh; }
+        body { background: #050508; color: #fff; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; }
         
         .overlay { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; background: rgba(5,5,8,0.92); backdrop-filter: blur(10px); z-index: 100; }
         .hidden { display: none !important; }
@@ -65,12 +65,12 @@
         <div class="stats-box">
             <div class="player-name"><span id="hud-name">Player</span> <span id="hud-badge" style="color: #ffcc00;"></span></div>
             <div class="bar-container"><div id="hp-bar" class="hp-fill"></div></div>
-            <p style="font-size: 11px; color: #aaa; margin-top: 5px;">Khu vực: <span style="color: #ffaa00;">Cổ Trấn Chiến Trường</span></p>
+            <p style="font-size: 11px; color: #aaa; margin-top: 5px;">Khu vực: <span style="color: #ffaa00;">Nghĩa Địa Rồng & Thùng Rác</span></p>
         </div>
 
         <div class="chat-container">
             <div id="chat-messages" class="chat-messages">
-                <div class="chat-msg"><b>System:</b> Đã tách module! Nhấn <b>Shift</b> bật Shift Lock, <b>Lăn chuột</b> để Zoom.</div>
+                <div class="chat-msg"><b>System:</b> Đã dựng Map 3D chuẩn ảnh mẫu! Nhấn <b>Shift</b> để bật Shift Lock.</div>
             </div>
             <input type="text" id="chat-input" class="chat-input" placeholder="Nhập tin nhắn..." onkeydown="handleChat(event)">
         </div>
@@ -89,7 +89,7 @@
         Kỹ năng: <b>Q, E, R</b> | Xoay góc nhìn: <b>Giữ chuột phải + Kéo</b>
     </div>
 
-    <!-- NẠP 3 FILE MODULE RIÊNG BIỆT VÀO GAME -->
+    <!-- NẠP 3 FILE MODULE -->
     <script src="map.js"></script>
     <script src="character.js"></script>
     <script src="effects.js"></script>
@@ -117,8 +117,8 @@
 
         function init3D() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x151824);
-            scene.fog = new THREE.FogExp2(0x151824, 0.012);
+            scene.background = new THREE.Color(0x0b131a);
+            scene.fog = new THREE.FogExp2(0x0b131a, 0.015);
 
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 
@@ -126,13 +126,11 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.body.appendChild(renderer.domElement);
 
-            // Gọi module Map
+            // Gọi Map & Nhân vật
             createMap(scene);
-
-            // Gọi module Character
             player = createCharacter(scene, isOwner);
 
-            // Sự kiện phím & chuột
+            // Bắt sự kiện phím
             window.addEventListener('keydown', e => {
                 keys[e.key.toLowerCase()] = true;
                 if (e.key === 'Shift') {
@@ -150,11 +148,10 @@
                 }
             });
 
-            // TÍNH NĂNG LĂN CHUỘT ZOOM GẦN / XA
             window.addEventListener('wheel', e => {
                 cameraDist += e.deltaY * 0.02;
-                if (cameraDist < 5) cameraDist = 5;   // Giới hạn zoom gần nhất
-                if (cameraDist < 25) cameraDist = 25; // Giới hạn zoom xa nhất
+                if (cameraDist < 5) cameraDist = 5;
+                if (cameraDist > 25) cameraDist = 25;
             });
 
             window.addEventListener('resize', () => {
@@ -166,7 +163,7 @@
             animate();
         }
 
-        let moveSpeed = 0.45;
+        let moveSpeed = 0.4;
         function animate() {
             requestAnimationFrame(animate);
 
@@ -174,6 +171,7 @@
                 player.rotation.y = targetRotation;
             }
 
+            // ĐÃ SỬA CHUẨN PHÍM DI CHUYỂN: W tiến, S lùi, A trái, D phải
             let moveX = 0, moveZ = 0;
             if (keys['w'] || keys['arrowup']) moveZ -= 1;
             if (keys['s'] || keys['arrowdown']) moveZ += 1;
@@ -185,15 +183,18 @@
                 player.position.x += Math.sin(angle) * moveSpeed;
                 player.position.z += Math.cos(angle) * moveSpeed;
                 if (!shiftLock) player.rotation.y = angle;
+
+                // Hoạt ảnh di chuyển tay chân (Animation bước đi)
+                animateCharacterWalk(player, Date.now());
             }
 
-            // Camera bám theo khoảng cách lăn chuột (Zoom)
-            let camHeight = 6;
+            // Camera bám theo sau lưng
+            let camHeight = 5;
             let offsetX = player.position.x - Math.sin(player.rotation.y) * cameraDist;
             let offsetZ = player.position.z - Math.cos(player.rotation.y) * cameraDist;
 
             camera.position.lerp(new THREE.Vector3(offsetX, player.position.y + camHeight, offsetZ), 0.2);
-            camera.lookAt(player.position.x, player.position.y + 2, player.position.z);
+            camera.lookAt(player.position.x, player.position.y + 1.5, player.position.z);
 
             renderer.render(scene, camera);
         }

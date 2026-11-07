@@ -3,226 +3,426 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JJK Battle 3D - Epic Arena</title>
+    <title>Brotato Survival 2D</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body { background: #050508; color: #fff; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; }
+        body { background: #0c0d14; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; height: 100vh; display: flex; justify-content: center; align-items: center; }
         
-        .overlay { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; background: rgba(5,5,8,0.92); backdrop-filter: blur(10px); z-index: 100; }
+        #canvas-container { position: relative; box-shadow: 0 0 30px rgba(0, 255, 204, 0.2); border-radius: 12px; overflow: hidden; border: 2px solid #1f2438; }
+        canvas { display: block; background: #141622; cursor: crosshair; }
+
+        /* UI HUD GIAO DIỆN IN-GAME */
+        #hud { position: absolute; top: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
+        .stats-group { background: rgba(15, 17, 26, 0.85); padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(4px); }
+        .hp-bar-bg { width: 180px; height: 12px; background: #000; border-radius: 6px; overflow: hidden; border: 1px solid #333; margin-top: 4px; }
+        .hp-bar-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff3366, #ff6600); transition: width 0.1s; }
+        .score-text { font-size: 18px; font-weight: bold; color: #00ffcc; text-shadow: 0 0 8px rgba(0,255,204,0.6); }
+
+        /* THANH SKILL HUD DƯỚI MÀN HÌNH */
+        .skills-container { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; pointer-events: none; }
+        .skill-box { width: 54px; height: 54px; background: rgba(15, 17, 26, 0.9); border: 2px solid #00ffcc; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        .skill-box.cooldown { border-color: #444; opacity: 0.6; }
+        .skill-key { font-weight: bold; font-size: 14px; color: #fff; }
+        .skill-name { font-size: 9px; color: #aaa; margin-top: 2px; }
+
+        /* GAME OVER OVERLAY */
+        #game-over { position: absolute; inset: 0; background: rgba(10, 10, 16, 0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 20; }
+        .btn-restart { margin-top: 15px; padding: 10px 24px; background: #00ffcc; border: none; border-radius: 6px; color: #000; font-weight: bold; cursor: pointer; font-size: 14px; }
+        .btn-restart:hover { background: #00cca3; }
         .hidden { display: none !important; }
-
-        .card { background: #12131a; border: 1px solid #2a2c3d; padding: 30px; border-radius: 16px; width: 360px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-        .card h2 { font-size: 24px; margin-bottom: 20px; color: #00ffcc; letter-spacing: 2px; text-transform: uppercase; }
-        .input-group { margin-bottom: 15px; text-align: left; }
-        .input-group label { display: block; font-size: 12px; color: #888; margin-bottom: 5px; }
-        .input-group input { width: 100%; padding: 12px; background: #090a0f; border: 1px solid #2a2c3d; border-radius: 8px; color: #fff; outline: none; }
-        .btn { width: 100%; padding: 12px; background: linear-gradient(45deg, #00ffcc, #0099ff); border: none; border-radius: 8px; color: #000; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
-        .btn:hover { transform: translateY(-2px); filter: brightness(1.2); }
-
-        /* TÂM NGẮM DẤU CỘNG (CROSSHAIR) KHI SHIFT LOCK */
-        #crosshair { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 16px; height: 16px; pointer-events: none; display: none; z-index: 50; }
-        #crosshair::before, #crosshair::after { content: ''; position: absolute; background: rgba(0, 255, 204, 0.9); box-shadow: 0 0 6px #00ffcc; }
-        #crosshair::before { top: 7px; left: 0; width: 16px; height: 2px; }
-        #crosshair::after { top: 0; left: 7px; width: 2px; height: 16px; }
-
-        #ui-layer { position: fixed; inset: 0; pointer-events: none; z-index: 10; display: flex; justify-content: space-between; padding: 20px; }
-        .stats-box { background: rgba(18, 19, 26, 0.85); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); width: 280px; height: fit-content; pointer-events: auto; }
-        .player-name { font-weight: bold; margin-bottom: 8px; color: #00ffcc; display: flex; justify-content: space-between; }
-        .bar-container { background: #000; height: 14px; border-radius: 7px; overflow: hidden; margin-bottom: 6px; border: 1px solid #333; }
-        .hp-fill { background: linear-gradient(90deg, #ff3366, #ff6600); width: 100%; height: 100%; }
-
-        .chat-container { width: 300px; height: 200px; background: rgba(10, 10, 15, 0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; display: flex; flex-direction: column; pointer-events: auto; overflow: hidden; }
-        .chat-messages { flex: 1; padding: 10px; overflow-y: auto; font-size: 12px; display: flex; flex-direction: column; gap: 5px; }
-        .chat-msg { background: rgba(255,255,255,0.06); padding: 5px 8px; border-radius: 4px; word-break: break-word; }
-        .chat-input { width: 100%; background: #000; border: none; border-top: 1px solid #222; padding: 8px 10px; color: #fff; outline: none; font-size: 12px; }
-
-        .skills-hud { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; pointer-events: auto; }
-        .skill-btn { width: 60px; height: 60px; background: rgba(20, 22, 35, 0.9); border: 2px solid #00ffcc; border-radius: 12px; color: #fff; font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 5px 15px rgba(0,255,204,0.3); }
-        .skill-btn span { font-size: 10px; color: #aaa; margin-top: 2px; }
-
-        .controls-hint { position: fixed; bottom: 20px; left: 20px; font-size: 11px; color: rgba(255,255,255,0.8); background: rgba(0,0,0,0.7); padding: 10px 14px; border-radius: 8px; pointer-events: auto; border: 1px solid rgba(255,255,255,0.1); }
-        .shiftlock-status { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); border: 1px solid #00ffcc; padding: 8px 16px; border-radius: 20px; font-size: 12px; color: #00ffcc; display: none; z-index: 20; font-weight: bold; }
     </style>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-    <div id="crosshair"></div>
-
-    <div id="login-screen" class="overlay">
-        <div class="card">
-            <h2>JJK BATTLE 3D</h2>
-            <div class="input-group">
-                <label>TÊN NHÂN VẬT / OWNER</label>
-                <input type="text" id="username-input" placeholder="Nhập tên..." value="Dynamyx">
+    <div id="canvas-container">
+        <div id="hud">
+            <div class="stats-group">
+                <div style="font-size: 12px; color: #aaa; font-weight: bold;" id="player-title">Dynamyx [HERO]</div>
+                <div class="hp-bar-bg"><div id="hp-fill" class="hp-bar-fill"></div></div>
             </div>
-            <button class="btn" onclick="enterGame()">VÀO ĐẤU TRƯỜNG</button>
-        </div>
-    </div>
-
-    <div id="ui-layer" class="hidden">
-        <div class="stats-box">
-            <div class="player-name"><span id="hud-name">Player</span> <span id="hud-badge" style="color: #ffcc00;"></span></div>
-            <div class="bar-container"><div id="hp-bar" class="hp-fill"></div></div>
-            <p style="font-size: 11px; color: #aaa; margin-top: 5px;">Khu vực: <span style="color: #ffaa00;">Nghĩa Địa Rồng & Thùng Rác</span></p>
-        </div>
-
-        <div class="chat-container">
-            <div id="chat-messages" class="chat-messages">
-                <div class="chat-msg"><b>System:</b> Đã dựng Map 3D chuẩn ảnh mẫu! Nhấn <b>Shift</b> để bật Shift Lock.</div>
+            <div class="stats-group">
+                <div class="score-text">ĐIỂM: <span id="score-val">0</span></div>
             </div>
-            <input type="text" id="chat-input" class="chat-input" placeholder="Nhập tin nhắn..." onkeydown="handleChat(event)">
         </div>
+
+        <div class="skills-container">
+            <div class="skill-box" id="sk-q"><span class="skill-key">Q / Click</span><span class="skill-name">Đạn Liên Thanh</span></div>
+            <div class="skill-box" id="sk-e" style="border-color: #9933ff;"><span class="skill-key">E</span><span class="skill-name">Sóng Xung Kích</span></div>
+            <div class="skill-box" id="sk-r" style="border-color: #ff0055;"><span class="skill-key">R</span><span class="skill-name">Bộc Phá Mưa Đạn</span></div>
+        </div>
+
+        <div id="game-over" class="hidden">
+            <h1 style="color: #ff3366; font-size: 32px; margin-bottom: 10px;">BẠN ĐÃ HY SINH!</h1>
+            <p style="color: #aaa;">Tổng điểm đạt được: <b id="final-score" style="color: #00ffcc;">0</b></p>
+            <button class="btn-restart" onclick="restartGame()">CHƠI LẠI</button>
+        </div>
+
+        <canvas id="gameCanvas" width="900" height="600"></canvas>
     </div>
-
-    <div id="shiftlock-indicator" class="shiftlock-status">🔒 SHIFT LOCK: ĐANG BẬT</div>
-
-    <div id="skills-hud" class="hidden skills-hud">
-        <div class="skill-btn" onclick="useSkill('Q')">Q<span>Đấm Năng Lượng</span></div>
-        <div class="skill-btn" onclick="useSkill('E')" style="border-color: #9933ff;">E<span>Vô Cực Dash</span></div>
-        <div class="skill-btn" onclick="useSkill('R')" style="border-color: #ff0055;">R<span>Bộc Phá Skill</span></div>
-    </div>
-
-    <div class="controls-hint hidden" id="hint-box">
-        Di chuyển: <b>W, A, S, D</b> | Shift Lock: <b>Shift</b> | Lăn chuột: <b>Zoom Gần/Xa</b><br>
-        Kỹ năng: <b>Q, E, R</b> | Xoay góc nhìn: <b>Giữ chuột phải + Kéo</b>
-    </div>
-
-    <!-- NẠP 3 FILE MODULE -->
-    <script src="map.js"></script>
-    <script src="character.js"></script>
-    <script src="effects.js"></script>
 
     <script>
-        let scene, camera, renderer, player, keys = {}, playerName = "Player", isOwner = false;
-        let shiftLock = false, targetRotation = 0, cameraDist = 14;
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
-        function enterGame() {
-            const val = document.getElementById('username-input').value.trim();
-            if(!val) return alert("Nhập tên đã!");
-            playerName = val;
-            if(val.toLowerCase().includes("owner") || val.toLowerCase().includes("dynamyx")) isOwner = true;
+        // Trạng thái Game
+        let player, bullets, enemies, particles, shockwaves, keys, mouse, score, isGameOver;
+        let cooldowns = { E: 0, R: 0 };
 
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('ui-layer').classList.remove('hidden');
-            document.getElementById('skills-hud').classList.remove('hidden');
-            document.getElementById('hint-box').classList.remove('hidden');
+        function initGame() {
+            score = 0;
+            isGameOver = false;
+            document.getElementById('score-val').innerText = '0';
+            document.getElementById('game-over').classList.add('hidden');
 
-            document.getElementById('hud-name').innerText = playerName;
-            if(isOwner) document.getElementById('hud-badge').innerText = "[OWNER HEADLESS]";
+            player = {
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                radius: 16,
+                color: '#00ffcc',
+                speed: 4.5,
+                maxHp: 100,
+                hp: 100,
+                angle: 0
+            };
 
-            init3D();
+            bullets = [];
+            enemies = [];
+            particles = [];
+            shockwaves = [];
+            keys = {};
+            mouse = { x: 0, y: 0, down: false };
+
+            updateHpUI();
         }
 
-        function init3D() {
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0b131a);
-            scene.fog = new THREE.FogExp2(0x0b131a, 0.015);
+        // Bắt sự kiện bàn phím & chuột
+        window.addEventListener('keydown', e => {
+            let k = e.key.toLowerCase();
+            keys[k] = true;
 
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            if (k === 'e' && cooldowns.E <= 0 && !isGameOver) useSkillE();
+            if (k === 'r' && cooldowns.R <= 0 && !isGameOver) useSkillR();
+        });
+        window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
+        canvas.addEventListener('mousemove', e => {
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = e.clientX - rect.left;
+            mouse.y = e.clientY - rect.top;
+        });
 
-            // Gọi Map & Nhân vật
-            createMap(scene);
-            player = createCharacter(scene, isOwner);
+        canvas.addEventListener('mousedown', () => mouse.down = true);
+        canvas.addEventListener('mouseup', () => mouse.down = false);
 
-            // Bắt sự kiện phím
-            window.addEventListener('keydown', e => {
-                keys[e.key.toLowerCase()] = true;
-                if (e.key === 'Shift') {
-                    shiftLock = !shiftLock;
-                    document.getElementById('shiftlock-indicator').style.display = shiftLock ? 'block' : 'none';
-                    document.getElementById('crosshair').style.display = shiftLock ? 'block' : 'none';
-                }
+        // --- CÁC KỸ NĂNG (SKILLS) ---
+        function shootBullet(angleOffset = 0, speed = 9, color = '#00ffcc', damage = 25) {
+            let finalAngle = player.angle + angleOffset;
+            bullets.push({
+                x: player.x + Math.cos(player.angle) * 20,
+                y: player.y + Math.sin(player.angle) * 20,
+                vx: Math.cos(finalAngle) * speed,
+                vy: Math.sin(finalAngle) * speed,
+                radius: 4,
+                color: color,
+                damage: damage,
+                life: 90
             });
-
-            window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
-
-            window.addEventListener('mousemove', e => {
-                if (shiftLock) {
-                    targetRotation -= e.movementX * 0.005;
-                }
-            });
-
-            window.addEventListener('wheel', e => {
-                cameraDist += e.deltaY * 0.02;
-                if (cameraDist < 5) cameraDist = 5;
-                if (cameraDist > 25) cameraDist = 25;
-            });
-
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
-
-            animate();
         }
 
-        let moveSpeed = 0.4;
-        function animate() {
-            requestAnimationFrame(animate);
+        function useSkillE() {
+            cooldowns.E = 180; // Cooldown 3 giây
+            shockwaves.push({
+                x: player.x,
+                y: player.y,
+                radius: 10,
+                maxRadius: 130,
+                color: '#9933ff',
+                opacity: 1
+            });
+            // Đẩy lùi & gây sát thương quái xung quanh
+            enemies.forEach(enemy => {
+                let dist = Math.hypot(enemy.x - player.x, enemy.y - player.y);
+                if (dist < 130) {
+                    enemy.hp -= 50;
+                    let angle = Math.atan2(enemy.y - player.y, enemy.x - player.x);
+                    enemy.x += Math.cos(angle) * 60;
+                    enemy.y += Math.sin(angle) * 60;
+                    createParticles(enemy.x, enemy.y, '#9933ff', 8);
+                }
+            });
+        }
 
-            if (shiftLock) {
-                player.rotation.y = targetRotation;
+        function useSkillR() {
+            cooldowns.R = 300; // Cooldown 5 giây
+            // Bộc phá 16 viên đạn tỏa ra 360 độ quanh chuột
+            for (let i = 0; i < 16; i++) {
+                let angle = (Math.PI * 2 / 16) * i;
+                bullets.push({
+                    x: mouse.x,
+                    y: mouse.y,
+                    vx: Math.cos(angle) * 7,
+                    vy: Math.sin(angle) * 7,
+                    radius: 5,
+                    color: '#ff0055',
+                    damage: 40,
+                    life: 70
+                });
             }
+            createParticles(mouse.x, mouse.y, '#ff0055', 25);
+        }
 
-            // ĐÃ SỬA CHUẨN PHÍM DI CHUYỂN: W tiến, S lùi, A trái, D phải
-            let moveX = 0, moveZ = 0;
-            if (keys['w'] || keys['arrowup']) moveZ -= 1;
-            if (keys['s'] || keys['arrowdown']) moveZ += 1;
+        // Tự động sinh quái vật
+        let enemySpawnTimer = 0;
+        function spawnEnemy() {
+            enemySpawnTimer++;
+            if (enemySpawnTimer % 45 === 0) {
+                let x, y;
+                if (Math.random() < 0.5) {
+                    x = Math.random() < 0.5 ? -20 : canvas.width + 20;
+                    y = Math.random() * canvas.height;
+                } else {
+                    x = Math.random() * canvas.width;
+                    y = Math.random() < 0.5 ? -20 : canvas.height + 20;
+                }
+                
+                let isFast = Math.random() < 0.3;
+                enemies.push({
+                    x: x,
+                    y: y,
+                    radius: isFast ? 12 : 16,
+                    color: isFast ? '#ffaa00' : '#ff3366',
+                    speed: isFast ? 2.6 : 1.6,
+                    hp: isFast ? 30 : 60,
+                    maxHp: isFast ? 30 : 60
+                });
+            }
+        }
+
+        function createParticles(x, y, color, count = 6) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    radius: Math.random() * 3 + 1,
+                    color: color,
+                    alpha: 1
+                });
+            }
+        }
+
+        let shootTimer = 0;
+        function update() {
+            if (isGameOver) return;
+
+            // Giảm Cooldown Skill
+            if (cooldowns.E > 0) cooldowns.E--;
+            if (cooldowns.R > 0) cooldowns.R--;
+
+            // Di chuyển nhân vật WASD
+            let moveX = 0, moveY = 0;
+            if (keys['w'] || keys['arrowup']) moveY -= 1;
+            if (keys['s'] || keys['arrowdown']) moveY += 1;
             if (keys['a'] || keys['arrowleft']) moveX -= 1;
             if (keys['d'] || keys['arrowright']) moveX += 1;
 
-            if (moveX !== 0 || moveZ !== 0) {
-                let angle = Math.atan2(moveX, moveZ) + (shiftLock ? player.rotation.y : 0);
-                player.position.x += Math.sin(angle) * moveSpeed;
-                player.position.z += Math.cos(angle) * moveSpeed;
-                if (!shiftLock) player.rotation.y = angle;
-
-                // Hoạt ảnh di chuyển tay chân (Animation bước đi)
-                animateCharacterWalk(player, Date.now());
+            if (moveX !== 0 && moveY !== 0) {
+                moveX *= 0.7071;
+                moveY *= 0.7071;
             }
 
-            // Camera bám theo sau lưng
-            let camHeight = 5;
-            let offsetX = player.position.x - Math.sin(player.rotation.y) * cameraDist;
-            let offsetZ = player.position.z - Math.cos(player.rotation.y) * cameraDist;
+            player.x += moveX * player.speed;
+            player.y += moveY * player.speed;
 
-            camera.position.lerp(new THREE.Vector3(offsetX, player.position.y + camHeight, offsetZ), 0.2);
-            camera.lookAt(player.position.x, player.position.y + 1.5, player.position.z);
+            // Giới hạn trong Map
+            player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
+            player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
 
-            renderer.render(scene, camera);
-        }
+            // Xoay góc mặt nhân vật theo chuột
+            player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
 
-        function useSkill(skillName) {
-            triggerBattleEffect(scene, player, skillName);
-            addChat("Hệ thống", `Đã kích hoạt kỹ năng: [${skillName}]!`);
-        }
+            // Xử lý bắn đạn thường (Chuột trái hoặc phím Q)
+            shootTimer++;
+            if ((mouse.down || keys['q']) && shootTimer % 8 === 0) {
+                shootBullet((Math.random() - 0.5) * 0.1);
+            }
 
-        function handleChat(e) {
-            if (e.key === 'Enter') {
-                const input = document.getElementById('chat-input');
-                const text = input.value.trim();
-                if (text) {
-                    addChat(playerName, text);
-                    input.value = '';
+            // Cập nhật Đạn
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                let b = bullets[i];
+                b.x += b.vx;
+                b.y += b.vy;
+                b.life--;
+
+                if (b.life <= 0 || b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) {
+                    bullets.splice(i, 1);
                 }
             }
+
+            // Cập nhật Sóng xung kích
+            for (let i = shockwaves.length - 1; i >= 0; i--) {
+                let sw = shockwaves[i];
+                sw.radius += 8;
+                sw.opacity -= 0.05;
+                if (sw.opacity <= 0) shockwaves.splice(i, 1);
+            }
+
+            // Cập nhật Quái vật
+            spawnEnemy();
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                let enemy = enemies[i];
+                let angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+                enemy.x += Math.cos(angle) * enemy.speed;
+                enemy.y += Math.sin(angle) * enemy.speed;
+
+                // Va chạm giữa Quái và Người chơi
+                let distToPlayer = Math.hypot(player.x - enemy.x, player.y - enemy.y);
+                if (distToPlayer < player.radius + enemy.radius) {
+                    player.hp -= 0.5;
+                    updateHpUI();
+                    if (player.hp <= 0) {
+                        isGameOver = true;
+                        document.getElementById('final-score').innerText = score;
+                        document.getElementById('game-over').classList.remove('hidden');
+                    }
+                }
+
+                // Va chạm giữa Đạn và Quái
+                for (let j = bullets.length - 1; j >= 0; j--) {
+                    let b = bullets[j];
+                    let distToBullet = Math.hypot(b.x - enemy.x, b.y - enemy.y);
+                    if (distToBullet < enemy.radius + b.radius) {
+                        enemy.hp -= b.damage;
+                        createParticles(b.x, b.y, b.color, 4);
+                        bullets.splice(j, 1);
+
+                        if (enemy.hp <= 0) {
+                            createParticles(enemy.x, enemy.y, enemy.color, 12);
+                            enemies.splice(i, 1);
+                            score += 10;
+                            document.getElementById('score-val').innerText = score;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Cập nhật Particle hiệu ứng
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= 0.04;
+                if (p.alpha <= 0) particles.splice(i, 1);
+            }
         }
 
-        function addChat(sender, msg) {
-            const chatBox = document.getElementById('chat-messages');
-            const div = document.createElement('div');
-            div.className = 'chat-msg';
-            div.innerHTML = `<b>${sender}:</b> ${msg}`;
-            chatBox.appendChild(div);
-            chatBox.scrollTop = chatBox.scrollHeight;
+        function updateHpUI() {
+            let pct = Math.max(0, (player.hp / player.maxHp) * 100);
+            document.getElementById('hp-fill').style.width = pct + '%';
         }
+
+        // --- VẼ ĐỒ HỌA GAME (RENDER) ---
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Vẽ Lưới Map 2D Đấu Trường
+            ctx.strokeStyle = '#1a1d2e';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < canvas.width; x += 40) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += 40) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+
+            // 2. Vẽ Sóng Xung Kích (Skill E)
+            shockwaves.forEach(sw => {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = sw.color;
+                ctx.globalAlpha = sw.opacity;
+                ctx.lineWidth = 4;
+                ctx.stroke();
+                ctx.restore();
+            });
+
+            // 3. Vẽ Đạn
+            bullets.forEach(b => {
+                ctx.fillStyle = b.color;
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // 4. Vẽ Quái Vật
+            enemies.forEach(e => {
+                ctx.fillStyle = e.color;
+                ctx.beginPath();
+                ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Thanh HP nhỏ trên đầu quái
+                if (e.hp < e.maxHp) {
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(e.x - 12, e.y - e.radius - 8, 24, 4);
+                    ctx.fillStyle = '#ff3366';
+                    ctx.fillRect(e.x - 12, e.y - e.radius - 8, (e.hp / e.maxHp) * 24, 4);
+                }
+            });
+
+            // 5. Vẽ Nhân Vật 2D (Chi tiết hơn: Thân + Tay Cầm Súng)
+            if (!isGameOver) {
+                ctx.save();
+                ctx.translate(player.x, player.y);
+                ctx.rotate(player.angle);
+
+                // Thân nhân vật tròn ngầu
+                ctx.fillStyle = player.color;
+                ctx.beginPath();
+                ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Hai mắt nhân vật
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(6, -5, 3, 0, Math.PI * 2);
+                ctx.arc(6, 5, 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Khẩu súng cầm trên tay
+                ctx.fillStyle = '#ffcc00';
+                ctx.fillRect(10, 3, 14, 5);
+
+                ctx.restore();
+            }
+
+            // 6. Vẽ Particle
+            particles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, p.radius, p.radius);
+                ctx.restore();
+            });
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function restartGame() {
+            initGame();
+        }
+
+        initGame();
+        gameLoop();
     </script>
 </body>
 </html>

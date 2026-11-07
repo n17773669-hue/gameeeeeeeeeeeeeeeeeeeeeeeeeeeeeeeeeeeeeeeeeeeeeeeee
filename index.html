@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JJK Battle - Roblox Style</title>
+    <title>JJK Battle 3D - Roblox Style</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body { background: #08080a; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; height: 100vh; }
+        body { background: #050508; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; height: 100vh; }
         
-        .overlay { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; background: rgba(5,5,8,0.9); backdrop-filter: blur(10px); z-index: 100; transition: opacity 0.5s; }
+        .overlay { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; background: rgba(5,5,8,0.9); backdrop-filter: blur(10px); z-index: 100; }
         .hidden { display: none !important; }
 
         .card { background: #12131a; border: 1px solid #2a2c3d; padding: 30px; border-radius: 16px; width: 360px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
@@ -19,367 +19,220 @@
         .btn { width: 100%; padding: 12px; background: linear-gradient(45deg, #00ffcc, #0099ff); border: none; border-radius: 8px; color: #000; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
         .btn:hover { transform: translateY(-2px); filter: brightness(1.2); }
 
-        .skin-menu { display: flex; gap: 20px; background: #12131a; padding: 25px; border-radius: 16px; border: 1px solid #2a2c3d; }
-        .skin-preview-box { width: 180px; height: 220px; background: #090a0f; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px dashed #3a3d54; }
-        .skin-preview-avatar { width: 65px; height: 110px; position: relative; }
-        .skin-list { display: flex; flex-direction: column; gap: 10px; width: 200px; }
-        .skin-item { padding: 10px; background: #1a1c26; border: 1px solid #2a2c3d; border-radius: 8px; cursor: pointer; text-align: left; transition: 0.2s; }
-        .skin-item:hover, .skin-item.active { border-color: #00ffcc; background: #222533; }
-        .skin-item span { display: block; font-size: 10px; color: #ffcc00; margin-top: 3px; }
-
-        #ui-layer { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
-        .stats-bar { position: absolute; top: 20px; left: 20px; background: rgba(18, 19, 26, 0.7); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); width: 280px; }
+        /* UI IN-GAME 3D */
+        #ui-layer { position: fixed; inset: 0; pointer-events: none; z-index: 10; display: flex; justify-content: space-between; padding: 20px; }
+        .stats-box { background: rgba(18, 19, 26, 0.8); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); width: 280px; height: fit-content; pointer-events: auto; }
         .player-name { font-weight: bold; margin-bottom: 8px; color: #00ffcc; display: flex; justify-content: space-between; }
         .bar-container { background: #000; height: 14px; border-radius: 7px; overflow: hidden; margin-bottom: 6px; border: 1px solid #333; }
         .hp-fill { background: linear-gradient(90deg, #ff3366, #ff6600); width: 100%; height: 100%; }
-        .stamina-fill { background: linear-gradient(90deg, #00ffcc, #0099ff); width: 100%; height: 100%; }
 
-        .controls-hint { position: absolute; bottom: 20px; left: 20px; font-size: 12px; color: rgba(255,255,255,0.7); background: rgba(0,0,0,0.6); padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
-        .shiftlock-status { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.6); border: 1px solid #00ffcc; padding: 8px 14px; border-radius: 8px; font-size: 12px; color: #00ffcc; display: none; }
+        /* KHUNG CHAT TRỰC TUYẾN */
+        .chat-container { width: 300px; height: 200px; background: rgba(10, 10, 15, 0.7); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; display: flex; flex-direction: column; pointer-events: auto; overflow: hidden; }
+        .chat-messages { flex: 1; padding: 10px; overflow-y: auto; font-size: 12px; display: flex; flex-direction: column; gap: 5px; }
+        .chat-msg { background: rgba(255,255,255,0.05); padding: 5px 8px; border-radius: 4px; word-break: break-word; }
+        .chat-input { width: 100%; background: #000; border: none; border-top: 1px solid #222; padding: 8px 10px; color: #fff; outline: none; font-size: 12px; }
 
-        canvas { display: block; }
+        .skills-hud { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; pointer-events: auto; }
+        .skill-btn { width: 60px; height: 60px; background: rgba(20, 22, 35, 0.9); border: 2px solid #00ffcc; border-radius: 12px; color: #fff; font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 5px 15px rgba(0,255,204,0.3); }
+        .skill-btn span { font-size: 10px; color: #aaa; margin-top: 2px; }
+
+        .controls-hint { position: fixed; bottom: 20px; left: 20px; font-size: 11px; color: rgba(255,255,255,0.6); background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 6px; pointer-events: auto; }
     </style>
+
+    <!-- Nhúng thư viện Three.js để làm môi trường 3D xịn -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
+    <!-- MÀN HÌNH ĐĂNG NHẬP -->
     <div id="login-screen" class="overlay">
         <div class="card">
-            <h2>JJK BATTLE</h2>
+            <h2>JJK 3D BATTLE</h2>
             <div class="input-group">
                 <label>TÊN NHÂN VẬT / OWNER</label>
-                <input type="text" id="username-input" placeholder="Nhập tên của bạn..." value="Dynamyx">
+                <input type="text" id="username-input" placeholder="Nhập tên..." value="Dynamyx">
             </div>
-            <button class="btn" onclick="goToSkinSelect()">TIẾP TỤC</button>
+            <button class="btn" onclick="enterGame()">VAO CHIẾN TRƯỜNG 3D</button>
         </div>
     </div>
 
-    <div id="skin-screen" class="overlay hidden">
-        <div class="skin-menu">
-            <div class="skin-preview-box">
-                <div id="skin-preview-avatar" class="skin-preview-avatar"></div>
-                <p id="skin-preview-name" style="margin-top: 15px; font-size: 13px; font-weight: bold;">Standard</p>
-            </div>
-            <div class="skin-list">
-                <h3 style="font-size: 14px; margin-bottom: 5px; color: #aaa;">KHO SKIN</h3>
-                <div class="skin-item active" onclick="selectSkin('default', 'Đồng Phục', '#00ffcc')">
-                    <strong>Đồng Phục Jujutsu</strong>
-                    <span>[Mặc định]</span>
-                </div>
-                <div class="skin-item" onclick="selectSkin('gojo', 'Thầy Gojo', '#9933ff')">
-                    <strong>Vô Cực Style</strong>
-                    <span>[Gojo]</span>
-                </div>
-                <div class="skin-item" onclick="selectSkin('headless', 'Owner Headless', '#ff0055')">
-                    <strong>Headless Owner</strong>
-                    <span>[Độc quyền VIP]</span>
-                </div>
-                <button class="btn" onclick="startGame()">VÀO CHIẾN TRƯỜNG</button>
-            </div>
-        </div>
-    </div>
-
+    <!-- GIAO DIỆN IN-GAME 3D -->
     <div id="ui-layer" class="hidden">
-        <div class="stats-bar">
-            <div class="player-name"><span id="hud-name">Player</span> <span id="hud-badge" style="font-size: 10px; color: #ffcc00;"></span></div>
+        <div class="stats-box">
+            <div class="player-name"><span id="hud-name">Player</span> <span id="hud-badge" style="color: #ffcc00;"></span></div>
             <div class="bar-container"><div id="hp-bar" class="hp-fill"></div></div>
-            <div class="bar-container"><div id="stamina-bar" class="stamina-fill"></div></div>
+            <p style="font-size: 11px; color: #888; margin-top: 5px;">Trạng thái: <span style="color: #00ffcc;">Sẵn sàng chiến đấu</span></p>
         </div>
-        <div id="shiftlock-indicator" class="shiftlock-status">🔒 SHIFT LOCK: BẬT</div>
-        <div class="controls-hint">
-            Di chuyển: <b>A / D</b> | Nhảy: <b>W / Space</b><br>
-            Lướt nhanh: <b>Ctrl / C</b> | Khóa góc nhìn (Shift Lock): <b>Shift</b>
+
+        <!-- Khung chat -->
+        <div class="chat-container">
+            <div id="chat-messages" class="chat-messages">
+                <div class="chat-msg"><b>System:</b> Chào mừng đến với đấu trường 3D!</div>
+            </div>
+            <input type="text" id="chat-input" class="chat-input" placeholder="Nhập tin nhắn..." onkeydown="handleChat(event)">
         </div>
     </div>
 
-    <canvas id="gameCanvas"></canvas>
+    <div id="skills-hud" class="hidden skills-hud">
+        <div class="skill-btn" onclick="useSkill('Q')">Q<span>Đấm Năng Lượng</span></div>
+        <div class="skill-btn" onclick="useSkill('E')" style="border-color: #9933ff;">E<span>Vô Cực Dash</span></div>
+        <div class="skill-btn" onclick="useSkill('R')" style="border-color: #ff0055;">R<span>Bộc Phá Skill</span></div>
+    </div>
+
+    <div class="controls-hint hidden" id="hint-box">
+        Di chuyển: <b>W, A, S, D</b> | Xoay góc nhìn: <b>Giữ chuột phải + Di chuyển</b> | Kỹ năng: <b>Q, E, R</b>
+    </div>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resize);
-        resize();
+        let scene, camera, renderer, player, keys = {}, playerName = "Player", isOwner = false;
 
-        let playerConfig = {
-            name: "Player",
-            skinId: "default",
-            color: "#00ffcc",
-            isHeadless: false,
-            isOwner: false
-        };
+        function enterGame() {
+            const val = document.getElementById('username-input').value.trim();
+            if(!val) return alert("Nhập tên đã!");
+            playerName = val;
+            if(val.toLowerCase().includes("owner") || val.toLowerCase().includes("dynamyx")) isOwner = true;
 
-        function goToSkinSelect() {
-            const inputVal = document.getElementById('username-input').value.trim();
-            if(!inputVal) return alert("Vui lòng nhập tên!");
-            playerConfig.name = inputVal;
-            if(inputVal.toLowerCase().includes("owner") || inputVal.toLowerCase().includes("dynamyx")) {
-                playerConfig.isOwner = true;
-                selectSkin('headless', 'Owner Headless', '#ff0055');
-            }
             document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('skin-screen').classList.remove('hidden');
-            updatePreview();
-        }
-
-        function selectSkin(id, name, color) {
-            playerConfig.skinId = id;
-            playerConfig.color = color;
-            playerConfig.isHeadless = (id === 'headless');
-            document.querySelectorAll('.skin-item').forEach(el => el.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-            document.getElementById('skin-preview-name').innerText = name;
-            updatePreview();
-        }
-
-        function updatePreview() {
-            const box = document.getElementById('skin-preview-avatar');
-            box.innerHTML = '';
-            const head = document.createElement('div');
-            head.style.cssText = `width:24px; height:24px; background:${playerConfig.isHeadless ? 'transparent' : '#ffcc99'}; border-radius:50%; margin: 0 auto; border: ${playerConfig.isHeadless ? 'none' : '2px solid #fff'};`;
-            const body = document.createElement('div');
-            body.style.cssText = `width:30px; height:45px; background:${playerConfig.color}; border-radius:6px; margin: 4px auto 0; border:2px solid #fff;`;
-            box.appendChild(head);
-            box.appendChild(body);
-        }
-
-        function startGame() {
-            document.getElementById('skin-screen').classList.add('hidden');
             document.getElementById('ui-layer').classList.remove('hidden');
-            document.getElementById('hud-name').innerText = playerConfig.name;
-            if(playerConfig.isOwner) document.getElementById('hud-badge').innerText = "[OWNER]";
-            initGame();
+            document.getElementById('skills-hud').classList.remove('hidden');
+            document.getElementById('hint-box').classList.remove('hidden');
+
+            document.getElementById('hud-name').innerText = playerName;
+            if(isOwner) document.getElementById('hud-badge').innerText = "[OWNER HEADLESS]";
+
+            init3D();
         }
 
-        let player, keys, mapObjects, particles, shiftLock = false;
+        function init3D() {
+            // 1. Khởi tạo Scene 3D
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x08080c);
+            scene.fog = new THREE.FogExp2(0x08080c, 0.015);
 
-        function initGame() {
-            keys = {};
-            particles = [];
-            player = {
-                x: canvas.width / 2,
-                y: canvas.height - 200,
-                vx: 0,
-                vy: 0,
-                width: 36,
-                height: 64,
-                grounded: false,
-                facing: 1,
-                animTime: 0,
-                isDashing: false,
-                dashCooldown: 0
-            };
+            // 2. Camera góc nhìn thứ 3
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-            mapObjects = {
-                groundY: canvas.height - 100,
-                trees: [
-                    { x: 150, size: 1.2, color: '#0d2b22' },
-                    { x: 480, size: 0.9, color: '#143d30' },
-                    { x: 880, size: 1.5, color: '#0a211a' },
-                    { x: 1250, size: 1.1, color: '#113328' }
-                ],
-                rocks: [
-                    { x: 300, w: 70, h: 40 },
-                    { x: 720, w: 100, h: 50 },
-                    { x: 1100, w: 80, h: 35 }
-                ]
-            };
+            // 3. Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
 
-            window.addEventListener('keydown', e => {
-                let key = e.key.toLowerCase();
-                keys[key] = true;
+            // 4. Ánh sáng
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            const dirLight = new THREE.DirectionalLight(0x00ffcc, 0.8);
+            dirLight.position.set(10, 20, 10);
+            scene.add(dirLight);
 
-                // TÍNH NĂNG SHIFT LOCK (GIỐNG ROBLOX)
-                if (e.key === 'Shift') {
-                    shiftLock = !shiftLock;
-                    document.getElementById('shiftlock-indicator').style.display = shiftLock ? 'block' : 'none';
+            // 5. Tạo Mặt Đất Chiến Trường 3D (Có ô bàn cờ / lưới phong cách game đấu trường)
+            const floorGeo = new THREE.PlaneGeometry(200, 200);
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0x11131d, roughness: 0.8 });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            scene.add(floor);
+
+            // Thêm các cột trụ / cây cối 3D xung quanh map không đụng hàng
+            for(let i = -60; i <= 60; i += 30) {
+                for(let j = -60; j <= 60; j += 30) {
+                    if(i !== 0 || j !== 0) {
+                        const pillarGeo = new THREE.BoxGeometry(4, 25, 4);
+                        const pillarMat = new THREE.MeshStandardMaterial({ color: 0x1a1d2e });
+                        const pillar = new THREE.Mesh(pillarGeo, pillarMat);
+                        pillar.position.set(i, 12.5, j);
+                        scene.add(pillar);
+
+                        // Đóm sáng phát quang đỉnh cột
+                        const glowGeo = new THREE.SphereGeometry(1.5, 8, 8);
+                        const glowMat = new THREE.MeshBasicMaterial({ color: isOwner ? 0xff0055 : 0x00ffcc });
+                        const glow = new THREE.Mesh(glowGeo, glowMat);
+                        glow.position.set(i, 25, j);
+                        scene.add(glow);
+                    }
                 }
-            });
+            }
 
-            window.addEventListener('keyup', e => {
-                keys[e.key.toLowerCase()] = false;
-            });
-
-            // Xoay nhân vật theo chuột nếu bật Shift Lock
-            window.addEventListener('mousemove', e => {
-                if (shiftLock) {
-                    let centerX = player.x + player.width / 2;
-                    if (e.clientX > centerX) player.facing = 1;
-                    else player.facing = -1;
-                }
-            });
-
-            requestAnimationFrame(gameLoop);
-        }
-
-        function update() {
-            const speed = player.isDashing ? 12 : 5;
+            // 6. Tạo Nhân Vật 3D (Player)
+            const playerGroup = new THREE.Group();
             
-            if (keys['a'] || keys['arrowleft']) {
-                player.vx = -speed;
-                if (!shiftLock) player.facing = -1;
-                player.animTime += 0.15;
-            } else if (keys['d'] || keys['arrowright']) {
-                player.vx = speed;
-                if (!shiftLock) player.facing = 1;
-                player.animTime += 0.15;
-            } else {
-                player.vx *= 0.7;
-                player.animTime = 0;
+            // Thân nhân vật
+            const bodyGeo = new THREE.BoxGeometry(2, 4, 1);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: isOwner ? 0xff0055 : 0x00ffcc });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.position.y = 2;
+            playerGroup.add(body);
+
+            // Đầu nhân vật (Nếu là Owner sẽ tàng hình tạo hiệu ứng Headless)
+            if(!isOwner) {
+                const headGeo = new THREE.BoxGeometry(1.4, 1.4, 1.4);
+                const headMat = new THREE.MeshStandardMaterial({ color: 0xffcc99 });
+                const head = new THREE.Mesh(headGeo, headMat);
+                head.position.y = 4.7;
+                playerGroup.add(head);
             }
 
-            if ((keys['w'] || keys[' '] || keys['arrowup']) && player.grounded) {
-                player.vy = -14;
-                player.grounded = false;
-                createParticles(player.x + 18, mapObjects.groundY, '#555');
-            }
+            scene.add(playerGroup);
+            player = playerGroup;
 
-            if ((keys['control'] || keys['c']) && player.dashCooldown <= 0) {
-                player.isDashing = true;
-                player.dashCooldown = 30;
-                createParticles(player.x, player.y + 30, playerConfig.color);
-            }
-            if (player.dashCooldown > 0) {
-                player.dashCooldown--;
-                if(player.dashCooldown < 20) player.isDashing = false;
-            }
+            // Xử lý phím bấm di chuyển
+            window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+            window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
-            player.vy += 0.6;
-            player.x += player.vx;
-            player.y += player.vy;
-
-            if (player.y + player.height >= mapObjects.groundY) {
-                player.y = mapObjects.groundY - player.height;
-                player.vy = 0;
-                player.grounded = true;
-            }
-
-            for(let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.alpha -= 0.03;
-                if(p.alpha <= 0) particles.splice(i, 1);
-            }
-        }
-
-        function createParticles(x, y, color) {
-            for(let i=0; i<6; i++) {
-                particles.push({
-                    x: x, y: y,
-                    vx: (Math.random() - 0.5) * 6,
-                    vy: (Math.random() - 0.5) * 4,
-                    color: color,
-                    alpha: 1
-                });
-            }
-        }
-
-        function drawMap() {
-            let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, '#05060a');
-            gradient.addColorStop(1, '#111522');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            mapObjects.trees.forEach(tree => {
-                ctx.save();
-                ctx.translate(tree.x, mapObjects.groundY);
-                ctx.fillStyle = '#1c1512';
-                ctx.fillRect(-12 * tree.size, -120 * tree.size, 24 * tree.size, 120 * tree.size);
-                ctx.fillStyle = tree.color;
-                ctx.beginPath();
-                ctx.arc(0, -140 * tree.size, 65 * tree.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#00ffcc';
-                ctx.globalAlpha = 0.4;
-                ctx.beginPath();
-                ctx.arc(-15 * tree.size, -150 * tree.size, 8 * tree.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
             });
 
-            mapObjects.rocks.forEach(r => {
-                ctx.fillStyle = '#262938';
-                ctx.fillRect(r.x, mapObjects.groundY - r.h, r.w, r.h);
-                ctx.fillStyle = '#3b3f54';
-                ctx.fillRect(r.x, mapObjects.groundY - r.h, r.w, 6);
-            });
-
-            ctx.fillStyle = '#161824';
-            ctx.fillRect(0, mapObjects.groundY, canvas.width, canvas.height - mapObjects.groundY);
-            ctx.fillStyle = '#00ffcc';
-            ctx.fillRect(0, mapObjects.groundY, canvas.width, 3);
+            animate();
         }
 
-        function drawPlayer() {
-            ctx.save();
-            ctx.translate(player.x + player.width/2, player.y + player.height/2);
-            let tilt = player.vx * 0.05;
-            ctx.rotate(tilt);
+        // Vòng lặp game 3D (Game Loop)
+        let moveSpeed = 0.4;
+        function animate() {
+            requestAnimationFrame(animate);
 
-            if(player.isDashing) {
-                ctx.fillStyle = playerConfig.color;
-                ctx.globalAlpha = 0.4;
-                ctx.fillRect(-player.width/2 - player.facing*15, -player.height/2, player.width, player.height);
+            // Điều khiển W, A, S, D di chuyển trong không gian 3D
+            if (keys['w'] || keys['arrowup']) player.position.z -= moveSpeed;
+            if (keys['s'] || keys['arrowdown']) player.position.z += moveSpeed;
+            if (keys['a'] || keys['arrowleft']) player.position.x -= moveSpeed;
+            if (keys['d'] || keys['arrowright']) player.position.x += moveSpeed;
+
+            // Camera tự động bắt góc nhìn phía sau lưng nhân vật (Góc nhìn TSB / Roblox chuẩn)
+            camera.position.x = player.position.x;
+            camera.position.y = player.position.y + 8;
+            camera.position.z = player.position.z + 14;
+            camera.lookAt(player.position.x, player.position.y + 2, player.position.z);
+
+            renderer.render(scene, camera);
+        }
+
+        // Xử lý tung chiêu 3D
+        function useSkill(skillName) {
+            addChat("Hệ thống", `Bạn vừa tung chiêu kỹ năng: [${skillName}] hoành tráng!`);
+            // Tạo hiệu ứng chớp sáng khi bấm skill
+            scene.background = new THREE.Color(0x1a0033);
+            setTimeout(() => scene.background = new THREE.Color(0x08080c), 150);
+        }
+
+        // Xử lý khung chat
+        function handleChat(e) {
+            if (e.key === 'Enter') {
+                const input = document.getElementById('chat-input');
+                const text = input.value.trim();
+                if (text) {
+                    addChat(playerName, text);
+                    input.value = '';
+                }
             }
-            ctx.globalAlpha = 1;
-
-            ctx.fillStyle = playerConfig.color;
-            ctx.beginPath();
-            ctx.roundRect(-player.width/2, -player.height/2 + 20, player.width, player.height - 20, 6);
-            ctx.fill();
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            if (!playerConfig.isHeadless) {
-                ctx.fillStyle = '#ffcc99';
-                ctx.beginPath();
-                ctx.arc(0, -player.height/2 + 8, 14, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-                ctx.fillStyle = '#000';
-                ctx.fillRect(player.facing * 4, -player.height/2 + 6, 3, 5);
-            } else {
-                ctx.fillStyle = '#ff0055';
-                ctx.globalAlpha = 0.6;
-                ctx.beginPath();
-                ctx.arc(0, -player.height/2 + 10, 8 + Math.sin(Date.now() * 0.01)*3, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            ctx.fillStyle = '#111';
-            let legOffset = Math.sin(player.animTime) * 10;
-            ctx.fillRect(-12, player.height/2 - 10, 8, 10 + (player.grounded ? legOffset : 0));
-            ctx.fillRect(4, player.height/2 - 10, 8, 10 - (player.grounded ? legOffset : 0));
-            ctx.restore();
-
-            ctx.fillStyle = playerConfig.isOwner ? '#ffcc00' : '#fff';
-            ctx.font = 'bold 12px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText(playerConfig.name, player.x + player.width/2, player.y - (playerConfig.isHeadless ? 10 : 25));
         }
 
-        function drawParticles() {
-            particles.forEach(p => {
-                ctx.fillStyle = p.color;
-                ctx.globalAlpha = p.alpha;
-                ctx.fillRect(p.x, p.y, 4, 4);
-            });
-            ctx.globalAlpha = 1;
-        }
-
-        function gameLoop() {
-            update();
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawMap();
-            drawParticles();
-            drawPlayer();
-            requestAnimationFrame(gameLoop);
+        function addChat(sender, msg) {
+            const chatBox = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = 'chat-msg';
+            div.innerHTML = `<b>${sender}:</b> ${msg}`;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
     </script>
 </body>

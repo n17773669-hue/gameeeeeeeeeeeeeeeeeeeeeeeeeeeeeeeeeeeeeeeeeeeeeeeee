@@ -1,0 +1,10 @@
+{
+  "name": "jjk-game-web",
+  "version": "1.0.0",
+  "description": "Game web 2.5D",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {}
+}

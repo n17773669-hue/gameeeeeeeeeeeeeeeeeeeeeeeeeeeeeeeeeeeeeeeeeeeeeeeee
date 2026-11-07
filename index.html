@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JJK Battle 3D - Arena</title>
+    <title>JJK Battle 3D - Modular</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
         body { background: #050508; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; height: 100vh; }
@@ -18,6 +18,12 @@
         .input-group input { width: 100%; padding: 12px; background: #090a0f; border: 1px solid #2a2c3d; border-radius: 8px; color: #fff; outline: none; }
         .btn { width: 100%; padding: 12px; background: linear-gradient(45deg, #00ffcc, #0099ff); border: none; border-radius: 8px; color: #000; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
         .btn:hover { transform: translateY(-2px); filter: brightness(1.2); }
+
+        /* TÂM NGẮM DẤU CỘNG (CROSSHAIR) KHI SHIFT LOCK */
+        #crosshair { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 16px; height: 16px; pointer-events: none; display: none; z-index: 50; }
+        #crosshair::before, #crosshair::after { content: ''; position: absolute; background: rgba(0, 255, 204, 0.9); box-shadow: 0 0 6px #00ffcc; }
+        #crosshair::before { top: 7px; left: 0; width: 16px; height: 2px; }
+        #crosshair::after { top: 0; left: 7px; width: 2px; height: 16px; }
 
         #ui-layer { position: fixed; inset: 0; pointer-events: none; z-index: 10; display: flex; justify-content: space-between; padding: 20px; }
         .stats-box { background: rgba(18, 19, 26, 0.85); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); width: 280px; height: fit-content; pointer-events: auto; }
@@ -42,6 +48,8 @@
 </head>
 <body>
 
+    <div id="crosshair"></div>
+
     <div id="login-screen" class="overlay">
         <div class="card">
             <h2>JJK BATTLE 3D</h2>
@@ -62,7 +70,7 @@
 
         <div class="chat-container">
             <div id="chat-messages" class="chat-messages">
-                <div class="chat-msg"><b>System:</b> Chào mừng tới đấu trường 3D! Nhấn <b>Shift</b> để bật Shift Lock.</div>
+                <div class="chat-msg"><b>System:</b> Đã tách module! Nhấn <b>Shift</b> bật Shift Lock, <b>Lăn chuột</b> để Zoom.</div>
             </div>
             <input type="text" id="chat-input" class="chat-input" placeholder="Nhập tin nhắn..." onkeydown="handleChat(event)">
         </div>
@@ -77,13 +85,18 @@
     </div>
 
     <div class="controls-hint hidden" id="hint-box">
-        Di chuyển: <b>W, A, S, D</b> | Khóa góc nhìn (Shift Lock): <b>Shift</b><br>
-        Kỹ năng: <b>Q, E, R</b> | Xoay góc nhìn tự do: <b>Giữ chuột phải + Kéo</b>
+        Di chuyển: <b>W, A, S, D</b> | Shift Lock: <b>Shift</b> | Lăn chuột: <b>Zoom Gần/Xa</b><br>
+        Kỹ năng: <b>Q, E, R</b> | Xoay góc nhìn: <b>Giữ chuột phải + Kéo</b>
     </div>
+
+    <!-- NẠP 3 FILE MODULE RIÊNG BIỆT VÀO GAME -->
+    <script src="map.js"></script>
+    <script src="character.js"></script>
+    <script src="effects.js"></script>
 
     <script>
         let scene, camera, renderer, player, keys = {}, playerName = "Player", isOwner = false;
-        let shiftLock = false, mouseX = 0, targetRotation = 0;
+        let shiftLock = false, targetRotation = 0, cameraDist = 14;
 
         function enterGame() {
             const val = document.getElementById('username-input').value.trim();
@@ -104,7 +117,6 @@
 
         function init3D() {
             scene = new THREE.Scene();
-            // Đổi màu nền sáng sủa hơn, có chiều sâu
             scene.background = new THREE.Color(0x151824);
             scene.fog = new THREE.FogExp2(0x151824, 0.012);
 
@@ -112,92 +124,21 @@
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.shadowMap.enabled = true;
             document.body.appendChild(renderer.domElement);
 
-            // Ánh sáng rực rỡ phong cách map chiến trường chiến đấu
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-            scene.add(ambientLight);
+            // Gọi module Map
+            createMap(scene);
 
-            const sunLight = new THREE.DirectionalLight(0xffeedd, 1.2);
-            sunLight.position.set(30, 50, 30);
-            scene.add(sunLight);
+            // Gọi module Character
+            player = createCharacter(scene, isOwner);
 
-            // Đèn phụ ánh sáng màu cam/vàng chiến đấu hệt như mẫu map
-            const fireLight = new THREE.PointLight(0xff7700, 2, 80);
-            fireLight.position.set(0, 15, 0);
-            scene.add(fireLight);
-
-            // 1. MẶT ĐẤT CHIẾN TRƯỜNG (Có ô lưới grid rõ ràng dễ nhìn không gian)
-            const floorGeo = new THREE.PlaneGeometry(300, 300);
-            const floorMat = new THREE.MeshStandardMaterial({ color: 0x1c2030, roughness: 0.9 });
-            const floor = new THREE.Mesh(floorGeo, floorMat);
-            floor.rotation.x = -Math.PI / 2;
-            scene.add(floor);
-
-            const gridHelper = new THREE.GridHelper(300, 40, 0x00ffcc, 0x2c324a);
-            gridHelper.position.y = 0.1;
-            scene.add(gridHelper);
-
-            // 2. TẠO ĐỊA VẬT MAP CHIẾN TRƯỜNG (Cột đá cổ, tường đổ nát xung quanh)
-            const obstacleMat = new THREE.MeshStandardMaterial({ color: 0x2b3045, roughness: 0.7 });
-            const accentMat = new THREE.MeshStandardMaterial({ color: 0x00ffcc, emissive: 0x00ffcc, emissiveIntensity: 0.5 });
-
-            for(let x = -70; x <= 70; x += 35) {
-                for(let z = -70; z <= 70; z += 35) {
-                    if(Math.abs(x) > 20 || Math.abs(z) > 20) {
-                        let height = 15 + Math.random() * 15;
-                        const pillarGeo = new THREE.BoxGeometry(6, height, 6);
-                        const pillar = new THREE.Mesh(pillarGeo, obstacleMat);
-                        pillar.position.set(x, height/2, z);
-                        scene.add(pillar);
-
-                        // Đỉnh cột phát sáng
-                        const topGeo = new THREE.BoxGeometry(6.4, 2, 6.4);
-                        const topMesh = new THREE.Mesh(topGeo, accentMat);
-                        topMesh.position.set(x, height + 1, z);
-                        scene.add(topMesh);
-                    }
-                }
-            }
-
-            // 3. TẠO NHÂN VẬT (PLAYER)
-            const playerGroup = new THREE.Group();
-            
-            // Thân nhân vật
-            const bodyGeo = new THREE.BoxGeometry(2.2, 4.2, 1.2);
-            const bodyMat = new THREE.MeshStandardMaterial({ color: isOwner ? 0xff0055 : 0x00ffcc });
-            const body = new THREE.Mesh(bodyGeo, bodyMat);
-            body.position.y = 2.1;
-            playerGroup.add(body);
-
-            // Đầu nhân vật (Hiệu ứng Headless cho Owner)
-            if(!isOwner) {
-                const headGeo = new THREE.BoxGeometry(1.5, 1.5, 1.5);
-                const headMat = new THREE.MeshStandardMaterial({ color: 0xffcc99 });
-                const head = new THREE.Mesh(headGeo, headMat);
-                head.position.y = 4.8;
-                playerGroup.add(head);
-            } else {
-                // Đốm lửa ma mị cho Owner Headless
-                const headlessGeo = new THREE.SphereGeometry(1, 16, 16);
-                const headlessMat = new THREE.MeshBasicMaterial({ color: 0xff0055 });
-                const headless = new THREE.Mesh(headlessGeo, headlessMat);
-                headless.position.y = 4.8;
-                playerGroup.add(headless);
-            }
-
-            scene.add(playerGroup);
-            player = playerGroup;
-            player.position.y = 0;
-
-            // Xử lý sự kiện phím & chuột
+            // Sự kiện phím & chuột
             window.addEventListener('keydown', e => {
                 keys[e.key.toLowerCase()] = true;
-                // Bật tắt Shift Lock
                 if (e.key === 'Shift') {
                     shiftLock = !shiftLock;
                     document.getElementById('shiftlock-indicator').style.display = shiftLock ? 'block' : 'none';
+                    document.getElementById('crosshair').style.display = shiftLock ? 'block' : 'none';
                 }
             });
 
@@ -207,6 +148,13 @@
                 if (shiftLock) {
                     targetRotation -= e.movementX * 0.005;
                 }
+            });
+
+            // TÍNH NĂNG LĂN CHUỘT ZOOM GẦN / XA
+            window.addEventListener('wheel', e => {
+                cameraDist += e.deltaY * 0.02;
+                if (cameraDist < 5) cameraDist = 5;   // Giới hạn zoom gần nhất
+                if (cameraDist < 25) cameraDist = 25; // Giới hạn zoom xa nhất
             });
 
             window.addEventListener('resize', () => {
@@ -222,12 +170,10 @@
         function animate() {
             requestAnimationFrame(animate);
 
-            // Xoay hướng nhân vật khi bật Shift Lock
             if (shiftLock) {
                 player.rotation.y = targetRotation;
             }
 
-            // Di chuyển W, A, S, D mượt mà theo góc nhìn
             let moveX = 0, moveZ = 0;
             if (keys['w'] || keys['arrowup']) moveZ -= 1;
             if (keys['s'] || keys['arrowdown']) moveZ += 1;
@@ -241,11 +187,10 @@
                 if (!shiftLock) player.rotation.y = angle;
             }
 
-            // Camera góc nhìn thứ 3 phía sau lưng nhân vật (Roblox / TSB Style)
-            let camDist = 14;
-            let camHeight = 7;
-            let offsetX = player.position.x - Math.sin(player.rotation.y) * camDist;
-            let offsetZ = player.position.z - Math.cos(player.rotation.y) * camDist;
+            // Camera bám theo khoảng cách lăn chuột (Zoom)
+            let camHeight = 6;
+            let offsetX = player.position.x - Math.sin(player.rotation.y) * cameraDist;
+            let offsetZ = player.position.z - Math.cos(player.rotation.y) * cameraDist;
 
             camera.position.lerp(new THREE.Vector3(offsetX, player.position.y + camHeight, offsetZ), 0.2);
             camera.lookAt(player.position.x, player.position.y + 2, player.position.z);
@@ -254,10 +199,8 @@
         }
 
         function useSkill(skillName) {
+            triggerBattleEffect(scene, player, skillName);
             addChat("Hệ thống", `Đã kích hoạt kỹ năng: [${skillName}]!`);
-            // Hiệu ứng chớp sáng kỹ năng
-            scene.background = new THREE.Color(0x330022);
-            setTimeout(() => scene.background = new THREE.Color(0x151824), 200);
         }
 
         function handleChat(e) {

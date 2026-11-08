@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Main Screen</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #1a1c23;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            animation: fadeIn 0.8s ease-in forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: #252836;
+            border-radius: 16px;
+            border: 2px solid #3b3e54;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        h1 { color: #e5c07b; margin-bottom: 15px; font-size: 2.5rem; }
+        p { color: #abb2bf; margin-bottom: 25px; }
+
+        .btn-group { display: flex; gap: 15px; justify-content: center; }
+        
+        button {
+            padding: 12px 28px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #98c379;
+            color: #1e1e1e;
+            transition: 0.2s;
+        }
+        button:hover { background: #7dac62; transform: translateY(-2px); }
+        .btn-back { background: #e06c75; color: #fff; }
+        .btn-back:hover { background: #c8505a; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>GIAO DIỆN CHÍNH GAME</h1>
+        <p>Chào mừng bạn! Đã vào trận đấu thành công.</p>
+        
+        <div class="btn-group">
+            <button onclick="alert('Đang vào trận!')">VÀO TRẬN ĐẤU</button>
+            <button class="btn-back" onclick="window.location.href='intro.html'">THOÁT RA INTRO</button>
+        </div>
+    </div>
+
+</body>
+</html>

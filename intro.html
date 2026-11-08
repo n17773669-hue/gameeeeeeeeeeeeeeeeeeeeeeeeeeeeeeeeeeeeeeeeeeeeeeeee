@@ -1,142 +1,199 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Limbus Style Intro Door</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #000; overflow: hidden; height: 100vh; font-family: sans-serif; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Limbus - Chiến Trường Khoa Học</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#000;overflow:hidden;font-family:"Courier New",monospace}
+:root{--c:#19e3ff;--w:#ffb020}
 
-        /* MÀN HÌNH CHÓP SÁNG ĐIỆN ẢNH */
-        #flash-light {
-            position: absolute; width: 100%; height: 100%;
-            background: #ffffff; opacity: 0; pointer-events: none;
-            z-index: 200; transition: opacity 0.3s ease-out;
-        }
+/* ===== CẢNH SAU CỬA: chỗ gắn cutscene / nhân vật ===== */
+#scene{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:
+   linear-gradient(rgba(25,227,255,.07) 1px,transparent 1px) 0 0/60px 60px,
+   linear-gradient(90deg,rgba(25,227,255,.07) 1px,transparent 1px) 0 0/60px 60px,
+   radial-gradient(ellipse at center,#bff6ff 0%,#1a8fb0 22%,#06202e 55%,#000 100%);
+  transform:scale(1);transition:transform 3.2s cubic-bezier(.3,0,.2,1)}
+#scene.push{transform:scale(1.5)}
+#scene video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
+#title{color:#fff;font-size:clamp(30px,7vw,84px);letter-spacing:.35em;text-shadow:0 0 30px var(--c);opacity:0;transition:opacity 1.2s 1.4s}
+#sub{color:var(--c);letter-spacing:.5em;font-size:clamp(11px,1.8vw,18px);margin-top:14px;opacity:0;transition:opacity 1.2s 1.8s}
+#scene.push #title,#scene.push #sub{opacity:1}
 
-        /* KHUNG CỬA ĐÔI */
-        .door-container {
-            position: absolute; width: 100%; height: 100%;
-            z-index: 100; display: flex; overflow: hidden;
-        }
+/* ===== CỬA KIM LOẠI ===== */
+#stage{position:absolute;inset:0;display:flex;z-index:10;pointer-events:none}
+.door{width:50%;height:100%;position:relative;transition:transform 1.9s cubic-bezier(.7,0,.2,1);
+  background:
+   repeating-linear-gradient(0deg,transparent 0 24.6%,rgba(0,0,0,.7) 24.6% 25%),
+   linear-gradient(90deg,rgba(255,255,255,.05),transparent 20%,transparent 80%,rgba(255,255,255,.05)),
+   linear-gradient(180deg,#39434b,#232a31 45%,#161b20);
+  box-shadow:inset 0 0 90px #000}
+.door.l{border-right:2px solid #000}.door.r{border-left:2px solid #000}
+.stage-open .door.l{transform:translateX(-102%)}
+.stage-open .door.r{transform:translateX(102%)}
 
-        .door-left, .door-right {
-            width: 50%; height: 100%;
-            background: linear-gradient(135deg, #0d0a09 0%, #030202 100%);
-            border-right: 5px solid #2a150b;
-            box-shadow: inset 0 0 120px rgba(0,0,0,0.95);
-            transition: transform 1.1s cubic-bezier(0.77, 0, 0.175, 1);
-            position: relative;
-        }
-        .door-right { border-right: none; border-left: 5px solid #2a150b; }
+/* sọc cảnh báo ở mép giữa */
+.door::after{content:'';position:absolute;top:0;bottom:0;width:46px;
+  background:repeating-linear-gradient(45deg,var(--w) 0 18px,#111 18px 36px);
+  box-shadow:0 0 20px rgba(0,0,0,.9);opacity:.92}
+.door.l::after{right:0}.door.r::after{left:0}
 
-        /* KHE SÁNG ĐỎ Ở GIỮA CỬA */
-        .door-container::after {
-            content: ''; position: absolute; left: 50%; top: 0; transform: translateX(-50%);
-            width: 4px; height: 100%; background: #ff2200;
-            box-shadow: 0 0 20px #ff2200, 0 0 40px #ff4400;
-            opacity: 0.8; z-index: 102; transition: opacity 0.5s;
-        }
+/* tấm panel + đinh tán + đèn */
+.panel{position:absolute;left:12%;right:20%;height:26%;border:2px solid #0b0f12;border-radius:6px;
+  background:linear-gradient(180deg,#2c353d,#1b2228);box-shadow:inset 0 0 25px #000,0 2px 0 rgba(255,255,255,.06)}
+.door.r .panel{left:20%;right:12%}
+.panel.a{top:9%}.panel.b{bottom:9%}
+.panel::before{content:'';position:absolute;inset:10px;
+  background:radial-gradient(circle,#7a8791 0 3px,#111 4px,transparent 5px) 0 0/30px 30px}
+.led{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:var(--c);
+  box-shadow:0 0 14px var(--c),0 0 30px var(--c);animation:blink 1.4s infinite}
+.door.l .led{right:70px}.door.r .led{left:70px}
+@keyframes blink{50%{opacity:.25}}
+.alert .led{background:#ff2a2a;box-shadow:0 0 14px #f22,0 0 30px #f22;animation-duration:.25s}
+.grant .led{background:#3cff7a;box-shadow:0 0 14px #3f7,0 0 30px #3f7;animation:none}
 
-        /* NÚT BÁNH RĂNG GỖ & HIỆU ỨNG ĐỎ RỰC */
-        .gear-wrapper {
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 400px; height: 400px;
-            z-index: 105; cursor: pointer;
-        }
-
-        /* VÒNG NĂNG LƯỢNG ĐỎ BÙNG NỔ */
-        .energy-ring {
-            position: absolute; top: -15px; left: -15px; right: -15px; bottom: -15px;
-            border-radius: 50%; border: 4px solid #ff1100;
-            opacity: 0; box-shadow: 0 0 40px #ff1100, inset 0 0 30px #ff3300;
-            transition: all 0.4s ease-in-out;
-        }
-
-        .gear-btn {
-            width: 100%; height: 100%;
-            background: radial-gradient(circle, #3d2314 0%, #120703 80%);
-            border: 12px solid #5c3a21;
-            border-radius: 50%;
-            display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 0 50px rgba(255, 34, 0, 0.6), inset 0 0 50px #000;
-            transition: transform 0.9s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s;
-        }
-
-        .gear-svg {
-            width: 82%; height: 82%;
-            fill: #b0bec5;
-            filter: drop-shadow(0 8px 12px rgba(0,0,0,0.9));
-        }
-
-        /* CLASS ANIMATION KHI BẤM */
-        .active-spin { transform: rotate(1440deg) scale(1.1) !important; }
-        .active-glow { opacity: 1 !important; transform: scale(1.05); }
-        .door-open-left { transform: translateX(-100%); }
-        .door-open-right { transform: translateX(100%); }
-        .fade-out { opacity: 0; pointer-events: none; }
-    </style>
+/* ===== KHÓA NGUYÊN TỬ ===== */
+#lock{position:absolute;top:50%;left:50%;width:min(50vh,400px);aspect-ratio:1;transform:translate(-50%,-50%);
+  z-index:20;cursor:pointer;transition:opacity .5s,transform .6s}
+#lock.done{opacity:0;transform:translate(-50%,-50%) scale(1.4);pointer-events:none}
+#hud{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#06161d 0%,#02080b 75%);
+  border:6px solid #2d3a43;box-shadow:0 0 50px rgba(25,227,255,.45),inset 0 0 40px #000}
+#ticks{position:absolute;inset:8px;border-radius:50%;
+  background:repeating-conic-gradient(var(--c) 0 1.5deg,transparent 1.5deg 7.5deg);
+  -webkit-mask:radial-gradient(circle,transparent 0 88%,#000 89%);mask:radial-gradient(circle,transparent 0 88%,#000 89%);
+  opacity:.8;animation:rot 20s linear infinite reverse}
+#lock.go #ticks{animation-duration:1.2s}
+#atom{position:absolute;inset:14%;animation:rot 9s linear infinite}
+#lock.go #atom{animation-duration:.9s}
+@keyframes rot{to{transform:rotate(360deg)}}
+#atom svg{width:100%;height:100%;overflow:visible}
+#atom ellipse{fill:none;stroke:var(--c);stroke-width:1.6;filter:drop-shadow(0 0 4px var(--c))}
+#atom .n{fill:var(--c);filter:drop-shadow(0 0 10px var(--c))}
+#atom .e{fill:#fff}
+#status{position:absolute;bottom:-52px;width:100%;text-align:center;color:var(--c);letter-spacing:.3em;font-size:14px;
+  text-shadow:0 0 8px var(--c);animation:blink 1.6s infinite}
+#lock.go #status{animation:none}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;z-index:300;pointer-events:none;transition:opacity .35s}
+#fx{position:absolute;inset:0;z-index:15;pointer-events:none}
+.shake{animation:shake .5s}
+@keyframes shake{20%{transform:translate(-7px,4px)}40%{transform:translate(6px,-5px)}60%{transform:translate(-4px,3px)}80%{transform:translate(3px,-2px)}}
+</style>
 </head>
 <body>
+<div id="root" style="position:absolute;inset:0">
 
-    <!-- THẺ AUDIO PHÁT ÂM THANH GỐC TỪ VIDEO YOUTUBE (Giây 1 đến giây 4) -->
-    <audio id="intro-audio" preload="auto">
-        <source src="https://www.youtube.com/watch?v=2OzjeNk4MaM" type="audio/mp4">
-    </audio>
+  <div id="scene">
+    <video id="cutscene" playsinline></video>
+    <h1 id="title">LIMBUS</h1>
+    <div id="sub">CHIẾN TRƯỜNG KHOA HỌC</div>
+  </div>
 
-    <div id="flash-light"></div>
+  <div id="stage">
+    <div class="door l"><div class="panel a"><i class="led"></i></div><div class="panel b"><i class="led"></i></div></div>
+    <div class="door r"><div class="panel a"><i class="led"></i></div><div class="panel b"><i class="led"></i></div></div>
+  </div>
+  <canvas id="fx"></canvas>
 
-    <div class="door-container">
-        <div class="door-left" id="door-l"></div>
-        <div class="door-right" id="door-r"></div>
-        
-        <div class="gear-wrapper" onclick="triggerIntro()">
-            <div class="energy-ring" id="ring"></div>
-            <div class="gear-btn" id="gear">
-                <svg class="gear-svg" viewBox="0 0 100 100">
-                    <path d="M50 30 A20 20 0 1 0 50 70 A20 20 0 1 0 50 30 M43 6 L57 6 L59 18 A34 34 0 0 1 70 22 L81 13 L90 22 L81 33 A34 34 0 0 1 86 43 L96 45 L96 55 L86 57 A34 34 0 0 1 81 67 L90 78 L81 87 L70 78 A34 34 0 0 1 59 82 L57 94 L43 94 L41 82 A34 34 0 0 1 30 78 L19 87 L10 78 L19 67 A34 34 0 0 1 14 57 L4 55 L4 45 L14 43 A34 34 0 0 1 19 33 L10 22 L19 13 L30 22 A34 34 0 0 1 41 18 Z"/>
-                </svg>
-            </div>
-        </div>
+  <div id="lock">
+    <div id="hud"></div><div id="ticks"></div>
+    <div id="atom">
+      <svg viewBox="-50 -50 100 100">
+        <ellipse rx="44" ry="16"/><ellipse rx="44" ry="16" transform="rotate(60)"/><ellipse rx="44" ry="16" transform="rotate(120)"/>
+        <circle class="n" r="7"/><circle class="e" cx="44" r="3"/><circle class="e" cx="-22" cy="38" r="3"/><circle class="e" cx="-22" cy="-38" r="3"/>
+      </svg>
     </div>
+    <div id="status">CHẠM ĐỂ XÁC THỰC</div>
+  </div>
+  <div id="flash"></div>
+</div>
 
-    <script>
-        function triggerIntro() {
-            const audio = document.getElementById('intro-audio');
-            const gear = document.getElementById('gear');
-            const ring = document.getElementById('ring');
-            const doorL = document.getElementById('door-l');
-            const doorR = document.getElementById('door-r');
-            const flash = document.getElementById('flash-light');
+<script>
+/* ===== CẤU HÌNH ===== */
+const NEXT_PAGE="main.html";   // trang tiếp theo
+const SFX_FILE="intro.mp3";    // file âm thanh riêng (tùy chọn); không có thì dùng âm tự tạo
+const CUTSCENE="";             // vd "cutscene.mp4" để phát video khi cửa mở
 
-            // Tua đến đúng đoạn tiếng bánh răng bắt đầu trong video (00:01) và phát
-            audio.currentTime = 1.0;
-            audio.play().catch(err => console.log("Trình duyệt chặn autoplay:", err));
+/* ===== ÂM THANH TỰ TẠO ===== */
+let ac;
+function noise(dur,freq,vol,type='highpass',t0=0){
+  const n=ac.sampleRate*dur,b=ac.createBuffer(1,n,ac.sampleRate),d=b.getChannelData(0);
+  for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,1.5);
+  const s=ac.createBufferSource();s.buffer=b;
+  const f=ac.createBiquadFilter();f.type=type;f.frequency.value=freq;
+  const g=ac.createGain();g.gain.value=vol;
+  s.connect(f).connect(g).connect(ac.destination);s.start(ac.currentTime+t0);
+}
+function tone(f,dur,vol,type='sine',t0=0,f2){
+  const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime+t0;
+  o.type=type;o.frequency.setValueAtTime(f,t);
+  if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(g).connect(ac.destination);o.start(t);o.stop(t+dur);
+}
+const sfx={
+  scan(){for(let i=0;i<8;i++)tone(700+i*110,.07,.12,'square',i*.14)},
+  alarm(){tone(500,.18,.2,'sawtooth',0);tone(500,.18,.2,'sawtooth',.25)},
+  ok(){tone(880,.12,.25,'sine',0);tone(1320,.3,.25,'sine',.13)},
+  thunk(){tone(120,.4,.8,'triangle',0,40);noise(.25,600,.5,'lowpass')},
+  servo(){tone(70,1.9,.35,'sawtooth',0,170);tone(140,1.9,.12,'square',0,260)},
+  hiss(){noise(2.4,2500,.5)},
+  boom(){tone(70,.9,.9,'sine',0,22);noise(.5,300,.6,'lowpass')}
+};
 
-            // Kích hoạt hiệu ứng quay bánh răng & vòng sáng đỏ
-            gear.classList.add('active-spin');
-            ring.classList.add('active-glow');
+/* ===== HƠI NƯỚC / TIA LỬA ===== */
+const cv=document.getElementById('fx'),cx=cv.getContext('2d');
+function rs(){cv.width=innerWidth;cv.height=innerHeight}rs();addEventListener('resize',rs);
+let P=[];
+function steam(){for(let i=0;i<90;i++)P.push({x:innerWidth/2+(Math.random()-.5)*40,y:Math.random()*innerHeight,
+  vx:(Math.random()-.5)*9,vy:(Math.random()-.5)*1.5,r:Math.random()*40+20,l:1,k:0})}
+function sparks(){for(let i=0;i<50;i++)P.push({x:innerWidth/2,y:innerHeight/2,
+  vx:(Math.random()-.5)*16,vy:(Math.random()-.5)*16,r:Math.random()*2+1,l:1,k:1})}
+(function loop(){cx.clearRect(0,0,cv.width,cv.height);
+  P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vx*=.985;
+    if(p.k){p.l-=.03;cx.fillStyle=`rgba(255,200,80,${Math.max(p.l,0)})`}
+    else{p.l-=.007;p.r+=.4;cx.fillStyle=`rgba(200,240,255,${Math.max(p.l,0)*.09})`}
+    cx.beginPath();cx.arc(p.x,p.y,p.r,0,7);cx.fill()});
+  P=P.filter(p=>p.l>0);requestAnimationFrame(loop)})();
 
-            setTimeout(() => {
-                // Mở cửa đôi trượt sang hai bên
-                gear.parentElement.classList.add('fade-out');
-                doorL.classList.add('door-open-left');
-                doorR.classList.add('door-open-right');
+/* ===== KỊCH BẢN ===== */
+const $=id=>document.getElementById(id);
+let started=false;
+$('lock').addEventListener('click',start);
 
-                // Chớp sáng trắng điện ảnh cuối đoạn chuyển cảnh
-                setTimeout(() => {
-                    flash.style.opacity = '1';
+function start(){
+  if(started)return;started=true;
+  ac=new (window.AudioContext||window.webkitAudioContext)();
+  let useFile=false;
+  new Audio(SFX_FILE).play().then(()=>useFile=true).catch(()=>{});
+  const S=n=>{if(!useFile)sfx[n]()};
 
-                    // Chuyển sang main.html
-                    setTimeout(() => {
-                        window.location.href = "main.html";
-                    }, 350);
-                }, 450);
+  $('lock').classList.add('go');
+  $('status').textContent="ĐANG XÁC THỰC...";
+  setTimeout(()=>S('scan'),30);
 
-            }, 850);
-        }
-    </script>
+  // đèn chuyển đỏ (cảnh báo) rồi xanh (hợp lệ)
+  setTimeout(()=>{$('stage').classList.add('alert');S('alarm')},700);
+  setTimeout(()=>{
+    $('stage').classList.remove('alert');$('stage').classList.add('grant');
+    $('status').textContent="TRUY CẬP HỢP LỆ";S('ok');sparks();
+  },1500);
+
+  // khóa tách, cửa trượt mở, hơi nước phun, camera tiến vào
+  setTimeout(()=>{
+    S('thunk');$('root').classList.add('shake');$('lock').classList.add('done');
+  },2100);
+  setTimeout(()=>{
+    S('servo');S('hiss');
+    $('stage').classList.add('stage-open');$('scene').classList.add('push');
+    steam();setTimeout(steam,500);
+    if(CUTSCENE){const v=$('cutscene');v.src=CUTSCENE;v.style.display='block';v.play().catch(()=>{})}
+  },2400);
+
+  setTimeout(()=>{S('boom');$('flash').style.opacity=1},5000);
+  setTimeout(()=>{location.href=NEXT_PAGE},5600);
+}
+</script>
 </body>
 </html>

@@ -25,6 +25,7 @@ body[data-v=auth] #char{left:-4%;filter:brightness(.55) saturate(.8)}
 #fig{position:absolute;inset:0;animation:br 5s ease-in-out infinite;transform-origin:50% 100%;filter:drop-shadow(0 0 28px color-mix(in srgb,var(--a) 45%,transparent))}
 @keyframes br{50%{transform:scale(1.015) translateY(-6px)}}
 #fig svg,#fig img{width:100%;height:100%;object-fit:contain;object-position:bottom}
+#bg.art{background-size:cover;background-position:center}#bg.art::before,#bg.art::after{display:none}
 /* router */
 #app{position:fixed;inset:0;z-index:5}
 .view{position:absolute;inset:0;opacity:0;pointer-events:none;transform:scale(1.015);transition:opacity .45s,transform .45s;overflow:hidden}
@@ -137,7 +138,9 @@ body[data-v=intro].rev #char{opacity:1;filter:none}
 <script>
 /* ============ CẤU HÌNH ============ */
 const CFG={
-  CHAR_IMG:"char.png",      // PNG nền trong suốt, cao, nhân vật cắt ngang eo/đùi là đẹp nhất
+  CHAR_IMG:"char.png",      // ảnh nhân vật
+  BG_IMG:"bg.jpg",          // tranh nền sảnh (1920x1080, chừa trống bên trái cho nhân vật). Không có file thì dùng nền mặc định
+       // PNG nền trong suốt, cao, nhân vật cắt ngang eo/đùi là đẹp nhất
   GAME_MODULE:"",           // vd "./campaign.js" -> export async function start(container, Shell){ return {pause(){},resume(){}} }
   API_URL:""                // trống = lưu tài khoản trong trình duyệt (thử nghiệm)
 };
@@ -205,6 +208,7 @@ $('mand').innerHTML=MAND;
 function setFig(u){const k=LK[u&&u.seal]||LK.K;document.documentElement.style.setProperty('--a',k[2]);
   const im=new Image();im.alt='';im.onload=()=>{$('fig').innerHTML='';$('fig').appendChild(im)};$('fig').innerHTML=GEN;if(CFG.CHAR_IMG)im.src=CFG.CHAR_IMG}
 setFig();
+if(CFG.BG_IMG){const b=new Image();b.onload=()=>{$('bg').style.backgroundImage='linear-gradient(180deg,rgba(5,1,2,.35),rgba(5,1,2,.05) 40%,rgba(5,1,2,.55)),url('+CFG.BG_IMG+')';$('bg').classList.add('art')};b.src=CFG.BG_IMG}
 
 /* ============ INTRO NGẮN: chạm -> chém -> vào thẳng ============ */
 const saved=LS.get('sb_session');if(saved)Shell.user=saved;

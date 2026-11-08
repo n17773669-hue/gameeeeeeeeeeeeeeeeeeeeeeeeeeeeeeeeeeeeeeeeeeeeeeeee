@@ -3,408 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brotato Survival - Pro Edition</title>
+    <title>Game Intro Door Transition</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body { background: #08090e; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; height: 100vh; display: flex; justify-content: center; align-items: center; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0b0c10; font-family: sans-serif; overflow: hidden; height: 100vh; }
+
+        /* LỚP 1: KHUNG GAME CHÍNH (Nằm dưới cùng) */
+        #game-main {
+            position: absolute;
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            background: #1f2833; color: #66fcf1;
+            opacity: 0; transition: opacity 1s ease;
+        }
+
+        /* LỚP 2: LỚP ÁNH SÁNG TRẮNG */
+        #flash-light {
+            position: absolute; width: 100%; height: 100%;
+            background: #ffffff; opacity: 0;
+            pointer-events: none; z-index: 50;
+            transition: opacity 0.6s ease-out;
+        }
+
+        /* LỚP 3: CÁNH CỬA VÀ NÚT BÁNH RĂNG */
+        .door-container {
+            position: absolute; width: 100%; height: 100%;
+            z-index: 100; display: flex;
+        }
         
-        #canvas-container { position: relative; box-shadow: 0 0 40px rgba(0, 255, 204, 0.25); border-radius: 14px; overflow: hidden; border: 2px solid #25283d; }
-        canvas { display: block; background: #10121d; cursor: crosshair; }
+        .door-left, .door-right {
+            width: 50%; height: 100%;
+            background: #0b0c10;
+            border: 2px solid #45a29e;
+            transition: transform 1.2s cubic-bezier(0.77, 0, 0.175, 1);
+        }
 
-        /* UI HUD TRÊN MÀN HÌNH */
-        #hud { position: absolute; top: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; z-index: 10; }
-        .stats-group { background: rgba(15, 17, 26, 0.9); padding: 10px 16px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.12); backdrop-filter: blur(6px); }
-        .hp-bar-bg { width: 160px; height: 12px; background: #000; border-radius: 6px; overflow: hidden; border: 1px solid #444; margin-top: 4px; }
-        .hp-bar-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff3366, #ff6600); transition: width 0.1s; }
-        .info-text { font-size: 16px; font-weight: bold; color: #00ffcc; text-shadow: 0 0 8px rgba(0,255,204,0.5); }
+        /* Nút Bánh Răng ở giữa */
+        .gear-btn {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90px; height: 90px;
+            background: #1f2833; border: 4px solid #66fcf1;
+            border-radius: 50%; color: #66fcf1;
+            font-size: 40px; cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 0 20px #66fcf1;
+            z-index: 101;
+            transition: transform 0.8s ease, opacity 0.5s ease;
+        }
 
-        /* BẢNG CHỌN NÂNG CẤP GIỮA CÁC MÀN (SHOP) */
-        .overlay { position: absolute; inset: 0; background: rgba(8, 9, 14, 0.92); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 30; backdrop-filter: blur(8px); }
-        .card { background: #151824; border: 1px solid #2c324a; padding: 30px; border-radius: 16px; width: 440px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); }
-        .card h1 { font-size: 26px; color: #00ffcc; margin-bottom: 10px; letter-spacing: 1px; }
-        .card p { font-size: 13px; color: #aaa; margin-bottom: 20px; }
-        
-        .upgrade-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-        .upgrade-btn { background: #1e2235; border: 1px solid #3a415d; padding: 12px 16px; border-radius: 10px; color: #fff; cursor: pointer; text-align: left; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; }
-        .upgrade-btn:hover { border-color: #00ffcc; background: #252b42; transform: translateY(-2px); }
-        .upgrade-btn b { color: #ffcc00; font-size: 14px; }
+        /* KHUNG ANIMATION XOAY VÀ MỞ CỬA */
+        .gear-spin {
+            transform: translate(-50%, -50%) rotate(720deg) scale(1.2) !important;
+        }
 
-        .btn-main { padding: 12px 28px; background: linear-gradient(45deg, #00ffcc, #0099ff); border: none; border-radius: 8px; color: #000; font-weight: bold; cursor: pointer; font-size: 15px; transition: 0.2s; }
-        .btn-main:hover { filter: brightness(1.2); transform: translateY(-2px); }
-
-        .hidden { display: none !important; }
+        .door-open-left { transform: translateX(-100%); }
+        .door-open-right { transform: translateX(100%); }
+        .fade-out { opacity: 0; pointer-events: none; }
     </style>
 </head>
 <body>
 
-    <div id="canvas-container">
-        <!-- HUD TRONG GAME -->
-        <div id="hud" class="hidden">
-            <div class="stats-group">
-                <div style="font-size: 12px; color: #aaa; font-weight: bold;" id="player-title">Dynamyx [HERO]</div>
-                <div class="hp-bar-bg"><div id="hp-fill" class="hp-bar-fill"></div></div>
-            </div>
-            <div class="stats-group" style="display: flex; gap: 20px;">
-                <div class="info-text">WAVE: <span id="wave-val">1</span></div>
-                <div class="info-text" style="color: #ffcc00;">VÀNG: <span id="gold-val">0</span></div>
-            </div>
-        </div>
+    <!-- Khung Game chính hiển thị sau khi mở cửa -->
+    <div id="game-main">
+        <h1>MAIN MENU GAME</h1>
+        <p>Chào mừng bạn đã vào Game!</p>
+    </div>
 
-        <!-- MÀN HÌNH CHỌN NÂNG CẤP / SHOP GIỮA CÁC MÀN -->
-        <div id="shop-screen" class="overlay">
-            <div class="card">
-                <h1 id="shop-title">HOÀN THÀNH WAVE 1!</h1>
-                <p>Chọn 1 phần thưởng nâng cấp sức mạnh cho wave tiếp theo:</p>
-                <div class="upgrade-options" id="upgrade-list">
-                    <!-- Các nút nâng cấp được tạo tự động bằng JS -->
-                </div>
-            </div>
-        </div>
+    <!-- Lớp ánh sáng trắng -->
+    <div id="flash-light"></div>
 
-        <!-- MÀN HÌNH GAME OVER -->
-        <div id="game-over-screen" class="overlay hidden">
-            <div class="card">
-                <h1 style="color: #ff3366;">BẠN ĐÃ GỤC NGÃ!</h1>
-                <p>Đã sinh tồn đến: <b id="final-wave" style="color: #00ffcc;">Wave 1</b></p>
-                <button class="btn-main" onclick="restartGame()">CHƠI LẠI TỪ ĐẦU</button>
-            </div>
-        </div>
-
-        <canvas id="gameCanvas" width="960" height="600"></canvas>
+    <!-- Cửa và Bánh Răng -->
+    <div class="door-container" id="door-system">
+        <div class="door-left" id="door-l"></div>
+        <div class="door-right" id="door-r"></div>
+        <button class="gear-btn" id="gear-btn" onclick="openDoor()">⚙️</button>
     </div>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        function openDoor() {
+            const gear = document.getElementById('gear-btn');
+            const doorL = document.getElementById('door-l');
+            const doorR = document.getElementById('door-r');
+            const flash = document.getElementById('flash-light');
+            const mainGame = document.getElementById('game-main');
+            const doorSystem = document.getElementById('door-system');
 
-        let player, bullets, enemies, particles, gems, keys, mouse;
-        let wave = 1, gold = 0, gameActive = false;
-        let waveTimer = 0, waveDuration = 900; // 15 giây mỗi wave (60fps * 15)
-        let stats = { damage: 25, speed: 4.5, fireRate: 8, maxHp: 100 };
+            // 1. Nút Bánh răng xoay 2 vòng và phóng to nhẹ
+            gear.classList.add('gear-spin');
 
-        function initGame() {
-            wave = 1;
-            gold = 0;
-            stats = { damage: 25, speed: 4.5, fireRate: 8, maxHp: 100 };
-            startNewWave();
+            setTimeout(() => {
+                // 2. Bánh răng mờ dần & Cửa tách ra 2 bên
+                gear.classList.add('fade-out');
+                doorL.classList.add('door-open-left');
+                doorR.classList.add('door-open-right');
+
+                // 3. Bùng sáng trắng
+                setTimeout(() => {
+                    flash.style.opacity = '1';
+
+                    // 4. Mờ ánh sáng trắng -> Hiện Khung Game chính bên dưới
+                    setTimeout(() => {
+                        mainGame.style.opacity = '1';
+                        flash.style.opacity = '0';
+                        doorSystem.style.display = 'none'; // Xóa hẳn cửa khỏi giao diện
+                    }, 400);
+
+                }, 400);
+
+            }, 700); // Thời gian chờ bánh răng xoay xong
         }
-
-        function startNewWave() {
-            player = {
-                x: canvas.width / 2,
-                y: canvas.height / 2,
-                radius: 18,
-                hp: stats.maxHp,
-                angle: 0
-            };
-            bullets = [];
-            enemies = [];
-            particles = [];
-            gems = [];
-            keys = {};
-            mouse = { x: 0, y: 0, down: false };
-            waveTimer = 0;
-
-            document.getElementById('wave-val').innerText = wave;
-            document.getElementById('gold-val').innerText = gold;
-            document.getElementById('hud').classList.remove('hidden');
-            document.getElementById('shop-screen').classList.add('hidden');
-            document.getElementById('game-over-screen').classList.add('hidden');
-            gameActive = true;
-        }
-
-        // Sự kiện bàn phím & chuột
-        window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
-        window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
-
-        canvas.addEventListener('mousemove', e => {
-            const rect = canvas.getBoundingClientRect();
-            mouse.x = e.clientX - rect.left;
-            mouse.y = e.clientY - rect.top;
-        });
-        canvas.addEventListener('mousedown', () => mouse.down = true);
-        canvas.addEventListener('mouseup', () => mouse.down = false);
-
-        // Sinh quái vật theo wave
-        function spawnEnemies() {
-            if (waveTimer % Math.max(20, 50 - wave * 4) === 0 && waveTimer < waveDuration - 120) {
-                let side = Math.floor(Math.random() * 4);
-                let x, y;
-                if (side === 0) { x = Math.random() * canvas.width; y = -25; }
-                else if (side === 1) { x = Math.random() * canvas.width; y = canvas.height + 25; }
-                else if (side === 2) { x = -25; y = Math.random() * canvas.height; }
-                else { x = canvas.width + 25; y = Math.random() * canvas.height; }
-
-                let isStrong = Math.random() < (wave * 0.1);
-                enemies.push({
-                    x: x, y: y,
-                    radius: isStrong ? 20 : 15,
-                    color: isStrong ? '#ff3366' : '#ff9900',
-                    speed: 1.5 + wave * 0.15,
-                    hp: 30 + wave * 20,
-                    maxHp: 30 + wave * 20,
-                    isStrong: isStrong
-                });
-            }
-        }
-
-        function createParticles(x, y, color, count = 5) {
-            for (let i = 0; i < count; i++) {
-                particles.push({
-                    x: x, y: y,
-                    vx: (Math.random() - 0.5) * 5,
-                    vy: (Math.random() - 0.5) * 5,
-                    radius: Math.random() * 3 + 1,
-                    color: color,
-                    alpha: 1
-                });
-            }
-        }
-
-        let shootTimer = 0;
-        function update() {
-            if (!gameActive) return;
-
-            waveTimer++;
-            // Kiểm tra hết giờ Wave -> Mở Shop nâng cấp
-            if (waveTimer >= waveDuration) {
-                gameActive = false;
-                openShop();
-                return;
-            }
-
-            // Di chuyển nhân vật
-            let moveX = 0, moveY = 0;
-            if (keys['w'] || keys['arrowup']) moveY -= 1;
-            if (keys['s'] || keys['arrowdown']) moveY += 1;
-            if (keys['a'] || keys['arrowleft']) moveX -= 1;
-            if (keys['d'] || keys['arrowright']) moveX += 1;
-
-            if (moveX !== 0 && moveY !== 0) { moveX *= 0.707; moveY *= 0.707; }
-            player.x += moveX * stats.speed;
-            player.y += moveY * stats.speed;
-            player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
-            player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
-
-            // Xoay hướng nhân vật theo chuột
-            player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
-
-            // Bắn đạn tự động khi giữ chuột hoặc phím Q
-            shootTimer++;
-            if ((mouse.down || keys['q']) && shootTimer % stats.fireRate === 0) {
-                bullets.push({
-                    x: player.x + Math.cos(player.angle) * 20,
-                    y: player.y + Math.sin(player.angle) * 20,
-                    vx: Math.cos(player.angle) * 10,
-                    vy: Math.sin(player.angle) * 10,
-                    radius: 5,
-                    damage: stats.damage,
-                    color: '#00ffcc',
-                    life: 80
-                });
-            }
-
-            // Cập nhật Đạn
-            for (let i = bullets.length - 1; i >= 0; i--) {
-                let b = bullets[i];
-                b.x += b.vx; b.y += b.vy; b.life--;
-                if (b.life <= 0) bullets.splice(i, 1);
-            }
-
-            // Sinh quái & Cập nhật Quái
-            spawnEnemies();
-            for (let i = enemies.length - 1; i >= 0; i--) {
-                let e = enemies[i];
-                let angle = Math.atan2(player.y - e.y, player.x - e.x);
-                e.x += Math.cos(angle) * e.speed;
-                e.y += Math.sin(angle) * e.speed;
-
-                // Va chạm quái với người chơi
-                if (Math.hypot(player.x - e.x, player.y - e.y) < player.radius + e.radius) {
-                    player.hp -= 0.8;
-                    updateHpUI();
-                    if (player.hp <= 0) {
-                        gameActive = false;
-                        document.getElementById('final-wave').innerText = 'Wave ' + wave;
-                        document.getElementById('game-over-screen').classList.remove('hidden');
-                        document.getElementById('hud').classList.add('hidden');
-                    }
-                }
-
-                // Va chạm đạn với quái
-                for (let j = bullets.length - 1; j >= 0; j--) {
-                    let b = bullets[j];
-                    if (Math.hypot(b.x - e.x, b.y - e.y) < e.radius + b.radius) {
-                        e.hp -= b.damage;
-                        createParticles(b.x, b.y, '#00ffcc', 3);
-                        bullets.splice(j, 1);
-
-                        if (e.hp <= 0) {
-                            createParticles(e.x, e.y, e.color, 10);
-                            // RƠI HẠT KINH NGHIỆM / VÀNG KHI QUÁI CHẾT
-                            gems.push({ x: e.x, y: e.y, value: e.isStrong ? 5 : 1 });
-                            enemies.splice(i, 1);
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // Hút các hạt rớt ra (Gems / Vàng)
-            for (let i = gems.length - 1; i >= 0; i--) {
-                let g = gems[i];
-                let dist = Math.hypot(player.x - g.x, player.y - g.y);
-                if (dist < 80) { // Phạm vi hút hạt
-                    let angle = Math.atan2(player.y - g.y, player.x - g.x);
-                    g.x += Math.cos(angle) * 5;
-                    g.y += Math.sin(angle) * 5;
-                    if (dist < player.radius) {
-                        gold += g.value;
-                        document.getElementById('gold-val').innerText = gold;
-                        gems.splice(i, 1);
-                    }
-                }
-            }
-
-            // Particle
-            for (let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i];
-                p.x += p.vx; p.y += p.vy; p.alpha -= 0.04;
-                if (p.alpha <= 0) particles.splice(i, 1);
-            }
-        }
-
-        function updateHpUI() {
-            let pct = Math.max(0, (player.hp / stats.maxHp) * 100);
-            document.getElementById('hp-fill').style.width = pct + '%';
-        }
-
-        // HỆ THỐNG MỞ CỬA HÀNG NÂNG CẤP SAU MỖI WAVE
-        function openShop() {
-            document.getElementById('shop-title').innerText = `HOÀN THÀNH WAVE ${wave}!`;
-            let list = document.getElementById('upgrade-list');
-            list.innerHTML = '';
-
-            let upgrades = [
-                { name: 'Tăng Sát Thương Súng (+10 DMG)', desc: 'Đạn bắn mạnh hơn rõ rệt', apply: () => stats.damage += 10 },
-                { name: 'Tăng Tốc Độ Bắn (Fire Rate)', desc: 'Xả đạn nhanh hơn', apply: () => stats.fireRate = Math.max(3, stats.fireRate - 2) },
-                { name: 'Tăng Tốc Độ Di Chuyển (+0.8 Speed)', desc: 'Chạy né quái mượt hơn', apply: () => stats.speed += 0.8 },
-                { name: 'Hồi Phục & Tăng Max HP (+30 HP)', desc: 'Tăng máu tối đa và hồi đầy máu', apply: () => { stats.maxHp += 30; player.hp = stats.maxHp; } }
-            ];
-
-            // Chọn ngẫu nhiên 3 nâng cấp để người chơi lựa chọn
-            let shuffled = upgrades.sort(() => 0.5 - Math.random()).slice(0, 3);
-            shuffled.forEach(up => {
-                let btn = document.createElement('button');
-                btn.className = 'upgrade-btn';
-                btn.innerHTML = `<div><b>${up.name}</b><br><span style="font-size:11px; color:#aaa;">${up.desc}</span></div>`;
-                btn.onclick = () => {
-                    up.apply();
-                    wave++;
-                    startNewWave();
-                };
-                list.appendChild(btn);
-            });
-
-            document.getElementById('shop-screen').classList.remove('hidden');
-            document.getElementById('hud').classList.add('hidden');
-        }
-
-        // --- RENDER ĐỒ HỌA 2D (VẼ CANVAS) ---
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Vẽ Lưới Map 2D
-            ctx.strokeStyle = '#161929';
-            ctx.lineWidth = 1;
-            for (let x = 0; x < canvas.width; x += 40) {
-                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
-            }
-            for (let y = 0; y < canvas.height; y += 40) {
-                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
-            }
-
-            // Vẽ Hạt Rớt Ra (Gems / Vàng sáng lấp lánh)
-            gems.forEach(g => {
-                ctx.fillStyle = '#ffcc00';
-                ctx.beginPath();
-                ctx.arc(g.x, g.y, g.value > 1 ? 6 : 4, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.shadowColor = '#ffcc00';
-                ctx.shadowBlur = 8;
-            });
-            ctx.shadowBlur = 0; // Tắt shadow cho các vật thể khác
-
-            // Vẽ Đạn
-            bullets.forEach(b => {
-                ctx.fillStyle = b.color;
-                ctx.beginPath();
-                ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-                ctx.fill();
-            });
-
-            // Vẽ Quái Vật
-            enemies.forEach(e => {
-                ctx.fillStyle = e.color;
-                ctx.beginPath();
-                ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-            });
-
-            // Vẽ Nhân Vật (Thiết kế chi tiết phong cách Brotato Hero)
-            if (gameActive) {
-                ctx.save();
-                ctx.translate(player.x, player.y);
-                ctx.rotate(player.angle);
-
-                // Thân nhân vật
-                ctx.fillStyle = '#00ffcc';
-                ctx.beginPath();
-                ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 2.5;
-                ctx.stroke();
-
-                // Mắt ngầu
-                ctx.fillStyle = '#000';
-                ctx.beginPath();
-                ctx.arc(7, -5, 3.5, 0, Math.PI * 2);
-                ctx.arc(7, 5, 3.5, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Súng cầm trên tay
-                ctx.fillStyle = '#ffcc00';
-                ctx.fillRect(12, 4, 16, 6);
-
-                ctx.restore();
-            }
-
-            // Vẽ Particles
-            particles.forEach(p => {
-                ctx.save();
-                ctx.globalAlpha = p.alpha;
-                ctx.fillStyle = p.color;
-                ctx.fillRect(p.x, p.y, p.radius, p.radius);
-                ctx.restore();
-            });
-        }
-
-        function gameLoop() {
-            update();
-            draw();
-            requestAnimationFrame(gameLoop);
-        }
-
-        function restartGame() {
-            initGame();
-        }
-
-        initGame();
-        gameLoop();
     </script>
 </body>
 </html>

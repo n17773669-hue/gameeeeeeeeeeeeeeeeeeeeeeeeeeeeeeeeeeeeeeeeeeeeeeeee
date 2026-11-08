@@ -97,13 +97,153 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:"Courier New",
 .shake{animation:shake .5s}
 @keyframes shake{20%{transform:translate(-7px,4px)}40%{transform:translate(6px,-5px)}60%{transform:translate(-4px,3px)}80%{transform:translate(3px,-2px)}}
 </style>
+<style>
+/* ===== NÂNG CẤP CỬA ===== */
+.door{
+ background:
+  linear-gradient(115deg,transparent 40%,rgba(255,255,255,.08) 48%,transparent 56%),
+  url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .45 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>"),
+  repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0 1px,transparent 1px 3px),
+  linear-gradient(180deg,#46525d,#2b343d 40%,#1a2128);
+ background-size:250% 100%,200px 200px,auto,auto;
+ animation:sheen 7s linear infinite}
+@keyframes sheen{from{background-position:150% 0,0 0,0 0,0 0}to{background-position:-50% 0,0 0,0 0,0 0}}
+.door::before{content:'';position:absolute;inset:0;z-index:2;pointer-events:none;
+ background:linear-gradient(180deg,rgba(0,0,0,.4),transparent 18%,transparent 72%,rgba(70,40,10,.4))}
+
+.pnl{position:absolute;left:9%;right:21%;overflow:hidden;border-radius:8px;border:2px solid #0a0e11;
+ background:linear-gradient(145deg,#3a4852,#1d262d);
+ box-shadow:inset 2px 2px 0 rgba(255,255,255,.1),inset -3px -3px 14px #000,0 8px 16px rgba(0,0,0,.65)}
+.door.r .pnl{left:21%;right:9%}
+.pnl.t{top:8%;height:22%}.pnl.m{top:36%;height:28%}.pnl.b{bottom:8%;height:22%}
+.door .pnl .led{top:10px;right:12px!important;left:auto!important;width:10px;height:10px}
+
+.vent{position:absolute;inset:16% 8%;border:2px solid #0a0e11;border-radius:4px;
+ background:repeating-linear-gradient(0deg,#03070a 0 7px,#202a31 7px 11px);
+ box-shadow:inset 0 0 22px rgba(25,227,255,.45),0 0 0 3px rgba(255,255,255,.05)}
+.stencil{position:absolute;left:7%;top:9%;color:#cfd8de;font:bold clamp(11px,1.7vw,22px) "Courier New",monospace;
+ letter-spacing:.22em;opacity:.85;text-shadow:0 0 6px rgba(25,227,255,.5)}
+.screen{position:absolute;left:7%;right:7%;bottom:11%;height:44%;background:#02090c;border:2px solid #0a0e11;
+ border-radius:4px;box-shadow:inset 0 0 16px rgba(25,227,255,.55);display:flex;align-items:flex-end;gap:5%;padding:0 5%;overflow:hidden}
+.screen i{flex:1;background:linear-gradient(0deg,var(--c),#0e7);box-shadow:0 0 8px var(--c);height:40%;
+ animation:bar 1.2s ease-in-out infinite alternate}
+.screen i:nth-child(2){animation-delay:-.3s}.screen i:nth-child(3){animation-delay:-.7s}
+.screen i:nth-child(4){animation-delay:-.1s}.screen i:nth-child(5){animation-delay:-.5s}.screen i:nth-child(6){animation-delay:-.9s}
+@keyframes bar{from{height:12%}to{height:92%}}
+.warn{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--w);
+ font:bold clamp(10px,1.4vw,17px) "Courier New",monospace;letter-spacing:.14em;text-shadow:0 0 8px rgba(255,176,32,.6);
+ background:repeating-linear-gradient(45deg,rgba(255,176,32,.1) 0 14px,transparent 14px 28px)}
+
+/* ống dẫn năng lượng chạy vào khóa */
+.cond{position:absolute;height:3px;left:0;right:46px;z-index:1;opacity:.8;box-shadow:0 0 10px var(--c);
+ background:linear-gradient(90deg,transparent,var(--c),transparent) 0 0/200% 100%;animation:flow 1.8s linear infinite}
+.door.r .cond{left:46px;right:0;animation-direction:reverse}
+@keyframes flow{from{background-position:200% 0}to{background-position:-100% 0}}
+
+/* piston thủy lực ở mép giữa */
+.pist{position:absolute;top:0;bottom:0;width:22px;z-index:3;
+ background:
+  repeating-linear-gradient(0deg,rgba(0,0,0,.65) 0 5px,transparent 5px 110px),
+  linear-gradient(90deg,#10161a,#9fb0ba 35%,#eef6fa 50%,#9fb0ba 65%,#10161a);
+ box-shadow:0 0 14px #000}
+.door.l .pist{right:54px}.door.r .pist{left:54px}
+
+/* thanh trần */
+#lintel{position:absolute;top:0;left:0;right:0;height:clamp(34px,6vh,56px);z-index:12;display:flex;align-items:center;
+ justify-content:space-between;padding:0 3%;background:linear-gradient(180deg,#0b1014,#1f2a31);
+ border-bottom:3px solid var(--w);box-shadow:0 8px 20px #000;color:#c9d3da;
+ font:bold clamp(9px,1.3vw,15px) "Courier New",monospace;letter-spacing:.28em;transition:transform 1s .3s}
+.stage-open #lintel{transform:translateY(-115%)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:10px;background:var(--c);box-shadow:0 0 10px var(--c);animation:blink 1.2s infinite}
+.alert .dot{background:#f22;box-shadow:0 0 10px #f22}.grant .dot{background:#3f7;box-shadow:0 0 10px #3f7;animation:none}
+
+/* khóa có bu-lông viền ngoài */
+#lock::before{content:'';position:absolute;inset:-32px;border-radius:50%;border:11px dotted #7e8b95;
+ background:radial-gradient(circle,transparent 62%,#1b242b 63%);box-shadow:0 0 0 6px #10171c,0 10px 30px #000;z-index:-1}
+/* chữ trạng thái dễ đọc */
+#status{bottom:-78px;width:auto;left:50%;transform:translateX(-50%);white-space:nowrap;padding:8px 20px;
+ background:rgba(2,8,11,.88);border:1px solid var(--c);border-radius:4px;box-shadow:0 0 14px rgba(25,227,255,.4)}
+</style>
+<style>
+/* ===== BẢN PRO: LỚP ĐIỆN ẢNH ===== */
+#root{opacity:0}
+#root.pwr{opacity:1;animation:pwr 1.3s}
+@keyframes pwr{0%{opacity:0}8%{opacity:.9}14%{opacity:.1}24%{opacity:1}34%{opacity:.35}46%{opacity:1}56%{opacity:.6}100%{opacity:1}}
+
+#gate{position:fixed;inset:0;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;
+ background:radial-gradient(circle at center,#06222c,#000 70%);color:var(--c);transition:opacity .6s;
+ font:bold clamp(13px,2.2vw,24px) "Courier New",monospace;letter-spacing:.35em;text-align:center;padding:0 5%;text-shadow:0 0 14px var(--c)}
+#gate b{animation:blink 1.4s infinite}
+#gate small{margin-top:18px;font-size:.55em;color:#5d7a86;letter-spacing:.25em;text-shadow:none}
+#boot{position:fixed;inset:0;z-index:450;background:#02070a;color:#3cff9a;font:clamp(11px,1.8vw,16px)/1.9 "Courier New",monospace;
+ padding:8vh 6vw;white-space:pre-wrap;opacity:0;pointer-events:none;transition:opacity .5s;text-shadow:0 0 8px #3cff9a}
+#boot.on{opacity:1}
+
+.cbar{position:fixed;left:0;right:0;height:0;background:#000;z-index:120;transition:height 1.3s cubic-bezier(.2,.7,.2,1)}
+#bt{top:0}#bb{bottom:0}.bars .cbar{height:11vh}
+#ov{position:fixed;inset:0;z-index:250;pointer-events:none;mix-blend-mode:multiply;
+ background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,.8)),repeating-linear-gradient(0deg,rgba(0,0,0,.2) 0 1px,transparent 1px 3px)}
+
+/* tia sáng sau cửa */
+#rays{position:absolute;left:50%;top:50%;width:220vmax;height:220vmax;margin:-110vmax 0 0 -110vmax;pointer-events:none;
+ background:repeating-conic-gradient(rgba(190,250,255,0) 0 8deg,rgba(190,250,255,.38) 10deg,rgba(190,250,255,0) 12deg);
+ -webkit-mask:radial-gradient(circle,#000,transparent 42%);mask:radial-gradient(circle,#000,transparent 42%);
+ mix-blend-mode:screen;opacity:0;animation:rot 40s linear infinite;transition:opacity 1.6s}
+#scene.push #rays{opacity:.9}
+
+/* flare ngang + sóng xung kích */
+#flare{position:absolute;left:0;right:0;top:50%;height:4px;margin-top:-2px;z-index:14;pointer-events:none;opacity:0;transform:scaleX(0);
+ background:linear-gradient(90deg,transparent,#19e3ff 30%,#fff 50%,#19e3ff 70%,transparent);box-shadow:0 0 40px 8px rgba(25,227,255,.7)}
+.flare-go{animation:flare 2s ease-out}
+@keyframes flare{0%{transform:scaleX(0);opacity:1}35%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1.25);opacity:0}}
+#shock{position:absolute;left:50%;top:50%;width:200px;height:200px;margin:-100px;border-radius:50%;z-index:16;pointer-events:none;opacity:0;
+ border:4px solid var(--c);box-shadow:0 0 40px var(--c),inset 0 0 40px var(--c)}
+.shock-go{animation:shock 1.2s ease-out}
+@keyframes shock{0%{transform:scale(.3);opacity:1}100%{transform:scale(10);opacity:0}}
+
+/* HUD 4 góc */
+.hc{position:absolute;z-index:13;color:var(--c);font:11px/1.6 "Courier New",monospace;letter-spacing:.14em;padding:12px 16px;
+ opacity:.85;transition:opacity .6s;text-shadow:0 0 6px var(--c)}
+.hc::before{content:'';position:absolute;width:18px;height:18px;border:2px solid var(--c)}
+.tl{top:clamp(40px,7.5vh,64px);left:1.5%}.tl::before{top:0;left:0;border-right:0;border-bottom:0}
+.tr{top:clamp(40px,7.5vh,64px);right:1.5%;text-align:right}.tr::before{top:0;right:0;border-left:0;border-bottom:0}
+.bl{bottom:1.5%;left:1.5%}.bl::before{bottom:0;left:0;border-right:0;border-top:0}
+.br{bottom:1.5%;right:1.5%;text-align:right}.br::before{bottom:0;right:0;border-left:0;border-top:0}
+.open .hc{opacity:0}
+
+/* vòng tiến trình + tia quét trong khóa */
+#prog{position:absolute;inset:-12px;transform:rotate(-90deg);z-index:2;pointer-events:none}
+#prog circle{fill:none;stroke:var(--c);stroke-width:2.2;stroke-linecap:round;stroke-dasharray:301.6;stroke-dashoffset:301.6;filter:drop-shadow(0 0 5px var(--c))}
+#beam{position:absolute;left:10%;right:10%;top:8%;height:3px;z-index:3;opacity:0;
+ background:linear-gradient(90deg,transparent,#fff,transparent);box-shadow:0 0 14px 3px var(--c)}
+#lock.go #beam{opacity:1;animation:scan 1s ease-in-out infinite alternate}
+@keyframes scan{from{top:10%}to{top:90%}}
+
+/* tiêu đề điện ảnh */
+#titlebox{flex-direction:column}
+#title{font-weight:900;transition:none;opacity:1;transform:none;
+ text-shadow:3px 0 rgba(255,0,60,.65),-3px 0 rgba(0,200,255,.65),0 0 34px var(--c)}
+.w{display:inline-block;white-space:nowrap;margin:0 .22em}
+.ch{display:inline-block;opacity:0;transform:translateY(26px) scale(1.6);filter:blur(10px);transition:all .7s cubic-bezier(.2,.8,.2,1)}
+#titlebox.show .ch{opacity:1;transform:none;filter:none}
+.glitch{animation:gl .4s steps(2) 3}
+@keyframes gl{0%{transform:translate(0)}25%{transform:translate(-6px,1px);clip-path:inset(12% 0 52% 0)}
+ 50%{transform:translate(7px,-2px);clip-path:inset(60% 0 8% 0)}75%{transform:translate(-3px,2px);clip-path:inset(30% 0 30% 0)}100%{transform:none;clip-path:none}}
+#tag{margin-top:18px;color:var(--c);font:clamp(10px,1.6vw,19px) "Courier New",monospace;letter-spacing:.5em;opacity:0;transition:opacity 1.2s 1.2s;text-shadow:0 0 10px var(--c)}
+#titlebox.show #tag{opacity:1}
+#load{position:relative;width:min(46vw,420px);height:4px;margin-top:46px;background:rgba(255,255,255,.15);opacity:0;transition:opacity .6s}
+#load::before{content:"ĐANG TẢI CHIẾN TRƯỜNG...";position:absolute;top:-22px;left:0;color:var(--c);font:11px "Courier New",monospace;letter-spacing:.2em}
+#load i{display:block;height:100%;width:0;background:var(--c);box-shadow:0 0 12px var(--c);transition:width 3s linear}
+#load.run{opacity:1}#load.run i{width:100%}
+
+</style>
 </head>
 <body>
 <div id="root" style="position:absolute;inset:0">
 
   <div id="scene">
     <video id="cutscene" playsinline></video>
-    <div id="floaters"></div>
+    <div id="rays"></div><div id="floaters"></div>
     <svg id="drone" viewBox="0 0 120 80">
       <ellipse class="thr" cx="60" cy="70" rx="14" ry="5" fill="#19e3ff" opacity=".7"/>
       <rect x="22" y="30" width="76" height="5" rx="2" fill="#2d3a43"/>
@@ -115,16 +255,17 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:"Courier New",
       <rect x="34" y="52" width="10" height="3" rx="1" fill="#ffb020"/><rect x="76" y="52" width="10" height="3" rx="1" fill="#ffb020"/>
     </svg>
   </div>
-  <div id="titlebox"><h1 id="title">CHIẾN TRƯỜNG KHOA HỌC</h1></div>
+  <div id="titlebox"><h1 id="title"></h1><div id="tag"></div><div id="load"><i></i></div></div>
 
   <div id="stage">
-    <div class="door l"><div class="panel a"><i class="led"></i></div><div class="panel b"><i class="led"></i></div></div>
-    <div class="door r"><div class="panel a"><i class="led"></i></div><div class="panel b"><i class="led"></i></div></div>
+    <div class="door l" id="dl"></div>
+    <div class="door r" id="dr"></div>
+    <div id="lintel"><span><i class="dot"></i>SECTOR 07</span><span>KHU THÍ NGHIỆM · CỔNG CHIẾN TRƯỜNG</span><span>● ONLINE</span></div>
   </div>
   <canvas id="fx"></canvas>
 
   <div id="lock">
-    <div id="hud"></div><div id="ticks"></div>
+    <div id="hud"></div><div id="ticks"></div><svg id="prog" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48"/></svg><div id="beam"></div>
     <div id="atom">
       <svg viewBox="-50 -50 100 100">
         <ellipse rx="44" ry="16"/><ellipse rx="44" ry="16" transform="rotate(60)"/><ellipse rx="44" ry="16" transform="rotate(120)"/>
@@ -133,50 +274,84 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:"Courier New",
     </div>
     <div id="status">CHẠM ĐỂ XÁC THỰC</div>
   </div>
+  <div class="cbar" id="bt"></div><div class="cbar" id="bb"></div><div id="ov"></div>
+  <div id="flare"></div><div id="shock"></div>
+  <div class="hc tl">NODE 07<br>CPU <span id="h1">98</span>%</div>
+  <div class="hc tr">LÕI <span id="h2">4.20</span> GHz<br>NGUỒN ONLINE</div>
+  <div class="hc bl">ÁP SUẤT <span id="h3">1.02</span> ATM<br>NHIỆT ĐỘ <span id="h4">21</span>°C</div>
+  <div class="hc br">CẢM BIẾN 128/128<br>BẢO MẬT CẤP 5</div>
   <div id="flash"></div>
 </div>
 
+<div id="gate"><b>◈ NHẤN ĐỂ KHỞI ĐỘNG HỆ THỐNG ◈</b><small>BẬT LOA ĐỂ NGHE ÂM THANH</small></div>
+<pre id="boot"></pre>
+
 <script>
 /* ===== CẤU HÌNH ===== */
-const NEXT_PAGE="main.html";   // trang tiếp theo
-const SFX_FILE="intro.mp3";    // file âm thanh riêng (tùy chọn); không có thì dùng âm tự tạo
-const CUTSCENE="";             // vd "cutscene.mp4" để phát video khi cửa mở
+const NEXT_PAGE="main.html";            // trang tiếp theo
+const MUSIC_FILE="intro.mp3";           // (tùy chọn) nhạc/âm thanh riêng, phát chồng lên âm tự tạo. Không có file thì bỏ qua
+const CUTSCENE="";                      // vd "cutscene.mp4"
+const TITLE="CHIẾN TRƯỜNG KHOA HỌC";    // tên game
+const TAGLINE="KHOA HỌC LÀ VŨ KHÍ";     // dòng phụ, sửa tùy ý
+const $=id=>document.getElementById(id);
 
-/* ===== ÂM THANH TỰ TẠO ===== */
-let ac;
-function noise(dur,freq,vol,type='highpass',t0=0){
-  const n=ac.sampleRate*dur,b=ac.createBuffer(1,n,ac.sampleRate),d=b.getChannelData(0);
-  for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,1.5);
-  const s=ac.createBufferSource();s.buffer=b;
-  const f=ac.createBiquadFilter();f.type=type;f.frequency.value=freq;
-  const g=ac.createGain();g.gain.value=vol;
-  s.connect(f).connect(g).connect(ac.destination);s.start(ac.currentTime+t0);
+/* ===== ÂM THANH: reverb + compressor + drone + riser + impact ===== */
+let ac,bus,droneG,droneF;
+function initAudio(){
+  ac=new (window.AudioContext||window.webkitAudioContext)();
+  const comp=ac.createDynamicsCompressor(),master=ac.createGain();master.gain.value=.9;
+  master.connect(comp);comp.connect(ac.destination);
+  const rev=ac.createConvolver(),L=ac.sampleRate*2.8,ir=ac.createBuffer(2,L,ac.sampleRate);
+  for(let c=0;c<2;c++){const d=ir.getChannelData(c);for(let i=0;i<L;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/L,3)}
+  rev.buffer=ir;const rg=ac.createGain();rg.gain.value=.32;rev.connect(rg);rg.connect(master);
+  bus=ac.createGain();bus.connect(master);bus.connect(rev);
 }
-function tone(f,dur,vol,type='sine',t0=0,f2){
-  const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime+t0;
-  o.type=type;o.frequency.setValueAtTime(f,t);
-  if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+dur);
-  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
-  o.connect(g).connect(ac.destination);o.start(t);o.stop(t+dur);
+function nz(dur,f1,f2,vol,type='bandpass',t0=0,atk=.01,q=1){
+  const t=ac.currentTime+t0,n=Math.ceil(ac.sampleRate*dur),b=ac.createBuffer(1,n,ac.sampleRate),d=b.getChannelData(0);
+  for(let i=0;i<n;i++)d[i]=Math.random()*2-1;
+  const s=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();
+  s.buffer=b;f.type=type;f.Q.value=q;f.frequency.setValueAtTime(f1,t);f.frequency.exponentialRampToValueAtTime(f2,t+dur);
+  g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(vol,t+atk);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  s.connect(f);f.connect(g);g.connect(bus);s.start(t);
 }
-const sfx={
-  scan(){for(let i=0;i<8;i++)tone(700+i*110,.07,.12,'square',i*.14)},
-  alarm(){tone(500,.18,.2,'sawtooth',0);tone(500,.18,.2,'sawtooth',.25)},
-  ok(){tone(880,.12,.25,'sine',0);tone(1320,.3,.25,'sine',.13)},
-  thunk(){tone(120,.4,.8,'triangle',0,40);noise(.25,600,.5,'lowpass')},
-  servo(){tone(70,1.9,.35,'sawtooth',0,170);tone(140,1.9,.12,'square',0,260)},
-  hiss(){noise(2.4,2500,.5)},
-  boom(){tone(70,.9,.9,'sine',0,22);noise(.5,300,.6,'lowpass')}
+function tn(f1,f2,dur,vol,type='sine',t0=0,atk=.005,lp){
+  const t=ac.currentTime+t0,o=ac.createOscillator(),g=ac.createGain();
+  o.type=type;o.frequency.setValueAtTime(f1,t);o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+  g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(vol,t+atk);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  let n=o;if(lp){const f=ac.createBiquadFilter();f.type='lowpass';f.frequency.value=lp;o.connect(f);n=f}
+  n.connect(g);g.connect(bus);o.start(t);o.stop(t+dur+.05);
+}
+const SFX={
+  beep(i=0){tn(1200+i*70,1200+i*70,.06,.07,'square')},
+  drone(){
+    droneG=ac.createGain();droneG.gain.value=.0001;
+    droneF=ac.createBiquadFilter();droneF.type='lowpass';droneF.frequency.value=260;
+    [55,55.4,82.5,110.3].forEach(fr=>{const o=ac.createOscillator();o.type='sawtooth';o.frequency.value=fr;o.connect(droneF);o.start()});
+    const lfo=ac.createOscillator(),lg=ac.createGain();lfo.frequency.value=.15;lg.gain.value=120;lfo.connect(lg);lg.connect(droneF.frequency);lfo.start();
+    droneF.connect(droneG);droneG.connect(bus);droneG.gain.linearRampToValueAtTime(.09,ac.currentTime+3);
+  },
+  swell(){droneG.gain.linearRampToValueAtTime(.2,ac.currentTime+2);droneF.frequency.linearRampToValueAtTime(900,ac.currentTime+2.5)},
+  fade(){droneG.gain.linearRampToValueAtTime(.0001,ac.currentTime+2.5)},
+  riser(d){nz(d,300,8000,.35,'bandpass',0,d*.95,2);tn(80,900,d,.12,'sawtooth',0,d*.95,1200)},
+  scan(){for(let i=0;i<10;i++)tn(600+i*140,600+i*140,.08,.07,'square',i*.11)},
+  siren(){for(let i=0;i<4;i++){const f=i%2?620:880;tn(f,f,.2,.13,'sawtooth',i*.22,.01,1800)}},
+  chime(){[523.25,659.25,783.99,1046.5,1318.5].forEach((f,i)=>{tn(f,f,1.6,.1,'sine',i*.09,.01);tn(f*2,f*2,1,.03,'triangle',i*.09)})},
+  clank(){[210,340,560,910,1430].forEach(f=>tn(f,f*.98,.5,.1,'sine'));nz(.12,6000,3000,.5,'highpass');tn(900,300,.12,.15,'square')},
+  thunk(){tn(95,32,.8,.9,'sine');nz(.35,500,80,.7,'lowpass')},
+  servo(d){tn(55,170,d,.25,'sawtooth',0,.1,700);tn(110,320,d,.05,'square',0,.2,900);nz(d,500,1600,.18,'bandpass',0,.3)},
+  hiss(){nz(2.6,5000,1500,.45,'highpass',0,.06)},
+  rumble(d){tn(40,28,d,.7,'sawtooth',0,.4,110);nz(d,180,60,.5,'lowpass',0,.5)},
+  braam(){[41.2,61.7,82.4,123.5,164.8].forEach(f=>tn(f,f*1.02,3.2,.13,'sawtooth',0,.02,500+f*8));tn(70,24,1.6,1,'sine');nz(2.4,9000,800,.45,'highpass',0,.02)},
+  shimmer(){[1760,2349,3136].forEach((f,i)=>tn(f,f,2,.04,'sine',i*.12,.3))},
+  glitch(){for(let i=0;i<5;i++)nz(.05,400+Math.random()*5000,200+Math.random()*3000,.25,'bandpass',i*.06+Math.random()*.03,.005,4)}
 };
 
-/* ===== HƠI NƯỚC / TIA LỬA ===== */
-const cv=document.getElementById('fx'),cx=cv.getContext('2d');
+/* ===== HẠT: HƠI NƯỚC + TIA LỬA ===== */
+const cv=$('fx'),cx=cv.getContext('2d');
 function rs(){cv.width=innerWidth;cv.height=innerHeight}rs();addEventListener('resize',rs);
 let P=[];
-function steam(){for(let i=0;i<90;i++)P.push({x:innerWidth/2+(Math.random()-.5)*40,y:Math.random()*innerHeight,
-  vx:(Math.random()-.5)*9,vy:(Math.random()-.5)*1.5,r:Math.random()*40+20,l:1,k:0})}
-function sparks(){for(let i=0;i<50;i++)P.push({x:innerWidth/2,y:innerHeight/2,
-  vx:(Math.random()-.5)*16,vy:(Math.random()-.5)*16,r:Math.random()*2+1,l:1,k:1})}
+function steam(){for(let i=0;i<90;i++)P.push({x:innerWidth/2+(Math.random()-.5)*40,y:Math.random()*innerHeight,vx:(Math.random()-.5)*9,vy:(Math.random()-.5)*1.5,r:Math.random()*40+20,l:1,k:0})}
+function sparks(){for(let i=0;i<60;i++)P.push({x:innerWidth/2,y:innerHeight/2,vx:(Math.random()-.5)*18,vy:(Math.random()-.5)*18,r:Math.random()*2+1,l:1,k:1})}
 (function loop(){cx.clearRect(0,0,cv.width,cv.height);
   P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vx*=.985;
     if(p.k){p.l-=.03;cx.fillStyle=`rgba(255,200,80,${Math.max(p.l,0)})`}
@@ -184,56 +359,68 @@ function sparks(){for(let i=0;i<50;i++)P.push({x:innerWidth/2,y:innerHeight/2,
     cx.beginPath();cx.arc(p.x,p.y,p.r,0,7);cx.fill()});
   P=P.filter(p=>p.l>0);requestAnimationFrame(loop)})();
 
-/* ===== KÝ HIỆU KHOA HỌC BAY LƠ LỬNG ===== */
+/* ===== DỰNG GIAO DIỆN ===== */
+function doorHTML(label){
+  return `<div class="pnl t"><i class="led"></i><div class="vent"></div></div><i class="cond" style="top:33%"></i>
+  <div class="pnl m"><i class="led"></i><span class="stencil">${label}</span><div class="screen"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+  <i class="cond" style="top:67%"></i><div class="pnl b"><i class="led"></i><div class="warn">⚠ NGUY HIỂM · KHU CÁCH LY</div></div><div class="pist"></div>`;
+}
+$('dl').innerHTML=doorHTML("PHÒNG LAB-A");$('dr').innerHTML=doorHTML("MÃ CỬA 07-X");
+
 const SYM=["H₂O","E=mc²","Δ","π","⚛","CO₂","λ","Σ","DNA","∞","Fe","NaCl","√","Ω"];
-for(let i=0;i<26;i++){
-  const s=document.createElement('span');s.className='fl';
-  s.textContent=SYM[i%SYM.length];
-  s.style.left=Math.random()*96+'%';s.style.top=(60+Math.random()*50)+'%';
-  s.style.fontSize=(14+Math.random()*30)+'px';
-  s.style.animationDuration=(10+Math.random()*16)+'s';
-  s.style.animationDelay=(-Math.random()*20)+'s';
-  s.style.opacity=.25+Math.random()*.6;
-  document.getElementById('floaters').appendChild(s);
-}
+for(let i=0;i<26;i++){const s=document.createElement('span');s.className='fl';s.textContent=SYM[i%SYM.length];
+  s.style.cssText=`left:${Math.random()*96}%;top:${60+Math.random()*50}%;font-size:${14+Math.random()*30}px;animation-duration:${10+Math.random()*16}s;animation-delay:${-Math.random()*20}s;opacity:${.25+Math.random()*.6}`;
+  $('floaters').appendChild(s)}
 
-/* ===== KỊCH BẢN ===== */
-const $=id=>document.getElementById(id);
-let started=false;
+let gi=0;
+$('title').innerHTML=TITLE.split(' ').map(w=>`<span class="w">${[...w].map(c=>`<span class="ch" style="transition-delay:${(gi++)*60}ms">${c}</span>`).join('')}</span>`).join(' ');
+$('tag').textContent=TAGLINE;
+
+setInterval(()=>{$('h1').textContent=90+Math.floor(Math.random()*9);$('h2').textContent=(4+Math.random()*.4).toFixed(2);
+  $('h3').textContent=(1+Math.random()*.06).toFixed(2);$('h4').textContent=20+Math.floor(Math.random()*3)},450);
+
+/* ===== BƯỚC 1: CỔNG KHỞI ĐỘNG + BOOT ===== */
+let ready=false,started=false;
+$('gate').addEventListener('click',()=>{
+  initAudio();SFX.drone();
+  if(MUSIC_FILE){const a=new Audio(MUSIC_FILE);a.volume=.6;a.play().catch(()=>{})}
+  $('gate').style.opacity=0;setTimeout(()=>$('gate').remove(),600);
+  $('boot').classList.add('on');
+  const L=["> KHỞI ĐỘNG LÕI HỆ THỐNG ......... OK","> KIỂM TRA LÒ PHẢN ỨNG ............ OK","> TẢI BẢN ĐỒ CHIẾN TRƯỜNG ......... OK",
+    "> ĐỒNG BỘ CẢM BIẾN ............... OK","> CẢNH BÁO: CỬA ĐANG NIÊM PHONG","> CHỜ XÁC THỰC DANH TÍNH_"];
+  let i=0;const t=setInterval(()=>{
+    if(i<L.length){$('boot').textContent+=L[i]+"\n";SFX.beep(i);i++}
+    else{clearInterval(t);setTimeout(()=>{$('boot').classList.remove('on');$('root').classList.add('pwr');SFX.glitch();ready=true},500)}
+  },340);
+},{once:true});
+
+/* ===== BƯỚC 2: XÁC THỰC + MỞ CỬA ===== */
 $('lock').addEventListener('click',start);
-
 function start(){
-  if(started)return;started=true;
-  ac=new (window.AudioContext||window.webkitAudioContext)();
-  let useFile=false;
-  new Audio(SFX_FILE).play().then(()=>useFile=true).catch(()=>{});
-  const S=n=>{if(!useFile)sfx[n]()};
+  if(!ready||started)return;started=true;
+  const st=$('stage'),R=$('root'),lk=$('lock'),C=301.6,ring=document.querySelector('#prog circle');
+  lk.classList.add('go');SFX.riser(3);SFX.scan();
+  const t0=performance.now();
+  const iv=setInterval(()=>{const p=Math.min(100,Math.round((performance.now()-t0)/20));
+    $('status').textContent=p<100?`ĐANG XÁC THỰC ${p}%`:'TRUY CẬP HỢP LỆ';
+    ring.style.strokeDashoffset=C*(1-p/100);if(p>=100)clearInterval(iv)},30);
 
-  $('lock').classList.add('go');
-  $('status').textContent="ĐANG XÁC THỰC...";
-  setTimeout(()=>S('scan'),30);
-
-  // đèn chuyển đỏ (cảnh báo) rồi xanh (hợp lệ)
-  setTimeout(()=>{$('stage').classList.add('alert');S('alarm')},700);
+  setTimeout(()=>{st.classList.add('alert');SFX.siren()},700);
+  setTimeout(()=>{st.classList.remove('alert');st.classList.add('grant');SFX.chime();sparks()},2000);
+  setTimeout(()=>{SFX.clank();SFX.thunk();SFX.swell();R.classList.add('shake');$('shock').classList.add('shock-go');lk.classList.add('done')},2800);
   setTimeout(()=>{
-    $('stage').classList.remove('alert');$('stage').classList.add('grant');
-    $('status').textContent="TRUY CẬP HỢP LỆ";S('ok');sparks();
-  },1500);
-
-  // khóa tách, cửa trượt mở, hơi nước phun, camera tiến vào
-  setTimeout(()=>{
-    S('thunk');$('root').classList.add('shake');$('lock').classList.add('done');
-  },2100);
-  setTimeout(()=>{
-    S('servo');S('hiss');
-    $('stage').classList.add('stage-open');$('scene').classList.add('push');$('titlebox').classList.add('show');
-    steam();setTimeout(steam,500);
+    SFX.servo(1.9);SFX.hiss();SFX.rumble(2.6);
+    st.classList.add('stage-open');$('scene').classList.add('push');R.classList.add('open','bars');
+    $('flare').classList.add('flare-go');steam();setTimeout(steam,500);
     if(CUTSCENE){const v=$('cutscene');v.src=CUTSCENE;v.style.display='block';v.play().catch(()=>{})}
-  },2400);
-
-  setTimeout(()=>{S('boom');$('flash').style.opacity=1},5000);
-  setTimeout(()=>{location.href=NEXT_PAGE},5600);
+  },3100);
+  setTimeout(()=>{SFX.braam();SFX.shimmer();$('titlebox').classList.add('show')},4400);
+  setTimeout(()=>$('load').classList.add('run'),4900);
+  setTimeout(()=>{SFX.glitch();$('title').classList.add('glitch')},5600);
+  setTimeout(()=>{$('flash').style.opacity=1;SFX.fade()},8000);
+  setTimeout(()=>{location.href=NEXT_PAGE},8600);
 }
+
 </script>
 </body>
 </html>

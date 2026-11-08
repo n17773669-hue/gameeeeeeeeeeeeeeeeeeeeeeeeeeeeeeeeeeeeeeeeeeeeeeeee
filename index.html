@@ -329,6 +329,10 @@ function start(){
   setTimeout(()=>{SFX.glitch();$('title').classList.add('glitch')},5800);
   setTimeout(()=>{$('flash').style.opacity=1;SFX.fade();SFX.boom()},8300);
   setTimeout(()=>{location.href=NEXT_PAGE},8900);
+  // dự phòng: nếu 2 giây sau vẫn chưa chuyển trang thì hiện nút bấm tay
+  setTimeout(()=>{$('flash').style.opacity=0;const a=document.createElement('a');a.href=NEXT_PAGE;a.textContent='▶ VÀO ĐĂNG NHẬP';
+    a.style.cssText='position:fixed;left:50%;bottom:16vh;transform:translateX(-50%);z-index:600;padding:14px 28px;border:2px solid #e8b04a;color:#e8b04a;font:900 16px var(--f);letter-spacing:.3em;background:#1a0503;text-decoration:none';
+    document.body.appendChild(a)},10800);
 }
 </script>
 </body>

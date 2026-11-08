@@ -3,59 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Intro</title>
+    <title>Limbus Style Intro Door</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #0b0c10; overflow: hidden; height: 100vh; font-family: Arial, sans-serif; }
+        body { background: #050505; overflow: hidden; height: 100vh; font-family: 'Segoe UI', sans-serif; }
 
-        /* LỚP ÁNH SÁNG TRẮNG */
+        /* MÀN HÌNH CHÓP SÁNG BÙNG NỔ */
         #flash-light {
             position: absolute; width: 100%; height: 100%;
             background: #ffffff; opacity: 0; pointer-events: none;
-            z-index: 50; transition: opacity 0.5s ease-out;
+            z-index: 200; transition: opacity 0.4s ease-out;
         }
 
-        /* KHUNG CỬA VÀ BÁNH RĂNG GỖ */
+        /* KHUNG CỬA CHÍNH */
         .door-container {
             position: absolute; width: 100%; height: 100%;
-            z-index: 100; display: flex;
+            z-index: 100; display: flex; overflow: hidden;
         }
 
         .door-left, .door-right {
             width: 50%; height: 100%;
-            background: #12141d;
-            border-right: 2px solid #8B5A2B;
-            transition: transform 1.2s cubic-bezier(0.77, 0, 0.175, 1);
+            background: linear-gradient(135deg, #18110e 0%, #080605 100%);
+            border-right: 4px solid #8b4513;
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
+            transition: transform 1.2s cubic-bezier(0.7, 0, 0.1, 1);
+            position: relative;
         }
-        .door-right { border-right: none; border-left: 2px solid #8B5A2B; }
+        .door-right { 
+            border-right: none; 
+            border-left: 4px solid #8b4513; 
+        }
 
-        /* NÚT BÁNH RĂNG GỖ TO (Dựa theo ảnh bạn vẽ) */
-        .gear-btn {
-            position: absolute;
-            top: 50%; left: 50%;
+        /* HỌA TIẾT KIM LOẠI TRÊN CỬA */
+        .door-pattern {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0, rgba(255,255,255,0.02) 2px, transparent 0, transparent 20px);
+        }
+
+        /* NÚT BÁNH RĂNG GỖ TO ĐÙNG HOÀNH TRÁNG */
+        .gear-wrapper {
+            position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 260px; height: 260px; /* Kích thước to đúng tầm khoanh đỏ */
-            background: #3e2723;
-            border: 8px solid #8d6e63;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 0 35px rgba(141, 110, 99, 0.6), inset 0 0 20px #1b0000;
-            z-index: 101;
-            transition: transform 1s ease, opacity 0.5s ease;
+            width: 380px; height: 380px;
+            z-index: 101; cursor: pointer;
         }
 
-        /* SVG Bánh răng gỗ */
+        .gear-btn {
+            width: 100%; height: 100%;
+            background: radial-gradient(circle, #4a2810 0%, #1a0d05 70%);
+            border: 10px solid #8b5a2b;
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 0 60px rgba(212, 107, 8, 0.5), inset 0 0 40px #000;
+            transition: transform 1s cubic-bezier(0.5, 0, 0.2, 1), opacity 0.5s ease;
+        }
+
+        /* SVG BÁNH RĂNG CỔ ĐIỂN SẮC NÉT */
         .gear-svg {
             width: 80%; height: 80%;
             fill: #d7ccc8;
-            filter: drop-shadow(2px 4px 6px black);
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.8));
         }
 
-        /* ANIMATION XOAY & MỞ */
-        .gear-spin {
-            transform: translate(-50%, -50%) rotate(720deg) scale(1.15) !important;
+        /* VIỀN NĂNG LƯỢNG PHÁT SÁNG KHI BẤM */
+        .glow-ring {
+            position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px;
+            border-radius: 50%; border: 3px solid #ff4500;
+            opacity: 0; box-shadow: 0 0 30px #ff4500;
+            transition: opacity 0.3s;
         }
+
+        /* CLASS CHUYỂN ĐỘNG ANIMATION */
+        .gear-spin {
+            transform: rotate(1080deg) scale(1.15) !important;
+        }
+        .glow-active { opacity: 1 !important; }
         .door-open-left { transform: translateX(-100%); }
         .door-open-right { transform: translateX(100%); }
         .fade-out { opacity: 0; pointer-events: none; }
@@ -66,86 +88,87 @@
     <div id="flash-light"></div>
 
     <div class="door-container">
-        <div class="door-left" id="door-l"></div>
-        <div class="door-right" id="door-r"></div>
+        <div class="door-left" id="door-l"><div class="door-pattern"></div></div>
+        <div class="door-right" id="door-r"><div class="door-pattern"></div></div>
         
-        <!-- Nút Bánh Răng Gỗ To -->
-        <button class="gear-btn" id="gear-btn" onclick="startTransition()">
-            <svg class="gear-svg" viewBox="0 0 100 100">
-                <!-- Bánh răng gỗ cổ điển 8 rãnh -->
-                <path d="M50 35 A15 15 0 1 0 50 65 A15 15 0 1 0 50 35 M44 10 L56 10 L58 20 A30 30 0 0 1 68 24 L77 16 L85 24 L78 33 A30 30 0 0 1 82 43 L92 45 L92 57 L82 59 A30 30 0 0 1 78 69 L85 78 L77 86 L68 78 A30 30 0 0 1 58 82 L56 92 L44 92 L42 82 A30 30 0 0 1 32 78 L23 86 L15 78 L22 69 A30 30 0 0 1 18 59 L8 57 L8 45 L18 43 A30 30 0 0 1 22 33 L15 24 L23 16 L32 24 A30 30 0 0 1 42 20 Z"/>
-            </svg>
-        </button>
+        <div class="gear-wrapper" onclick="startCinematicTransition()">
+            <div class="glow-ring" id="glow"></div>
+            <div class="gear-btn" id="gear-btn">
+                <svg class="gear-svg" viewBox="0 0 100 100">
+                    <path d="M50 32 A18 18 0 1 0 50 68 A18 18 0 1 0 50 32 M44 8 L56 8 L58 18 A32 32 0 0 1 68 22 L78 14 L86 22 L78 32 A32 32 0 0 1 82 42 L92 44 L92 56 L82 58 A32 32 0 0 1 78 68 L86 78 L78 86 L68 78 A32 32 0 0 1 58 82 L56 92 L44 92 L42 82 A32 32 0 0 1 32 78 L22 86 L14 78 L22 68 A32 32 0 0 1 18 58 L8 56 L8 44 L18 42 A32 32 0 0 1 22 32 L14 22 L22 14 L32 22 A32 32 0 0 1 42 18 Z"/>
+                </svg>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Tạo âm thanh giả lập tiếng bánh răng gỗ & tiếng mở cửa bằng Web Audio API
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-        function playWoodGearSound() {
-            // Tiếng cộc cạch gỗ xoay
-            for (let i = 0; i < 12; i++) {
+        // Âm thanh bánh răng cơ khí ma sát gỗ & kim loại
+        function playGearAudio() {
+            for (let i = 0; i < 18; i++) {
                 setTimeout(() => {
                     let osc = audioCtx.createOscillator();
                     let gain = audioCtx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(120 + Math.random() * 40, audioCtx.currentTime);
-                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(100 + (i * 12), audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.06);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
                     osc.start();
-                    osc.stop(audioCtx.currentTime + 0.08);
-                }, i * 70);
+                    osc.stop(audioCtx.currentTime + 0.06);
+                }, i * 45);
             }
         }
 
-        function playDoorOpenSound() {
-            // Tiếng cửa trượt phát ra âm trầm nặng
+        // Âm thanh cửa nặng mở ra
+        function playDoorAudio() {
             let osc = audioCtx.createOscillator();
             let gain = audioCtx.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(60, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 1.2);
-            gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.2);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(80, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 1.2);
+            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
             osc.stop(audioCtx.currentTime + 1.2);
         }
 
-        function startTransition() {
+        function startCinematicTransition() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
 
             const gear = document.getElementById('gear-btn');
+            const glow = document.getElementById('glow');
             const doorL = document.getElementById('door-l');
             const doorR = document.getElementById('door-r');
             const flash = document.getElementById('flash-light');
 
-            // Phát âm thanh bánh răng xoay
-            playWoodGearSound();
+            // 1. Kích hoạt âm thanh và quay bánh răng 3 vòng (1080 deg)
+            playGearAudio();
             gear.classList.add('gear-spin');
+            glow.classList.add('glow-active');
 
             setTimeout(() => {
-                // Mở cửa + âm thanh cửa nặng trượt
-                playDoorOpenSound();
-                gear.classList.add('fade-out');
+                // 2. Mở cửa & biến mất bánh răng
+                playDoorAudio();
+                gear.parentElement.classList.add('fade-out');
                 doorL.classList.add('door-open-left');
                 doorR.classList.add('door-open-right');
 
+                // 3. Flash sáng hiệu ứng điện ảnh
                 setTimeout(() => {
-                    // Flash ánh sáng trắng
                     flash.style.opacity = '1';
 
+                    // 4. Nhảy sang giao diện game chính
                     setTimeout(() => {
-                        // Chuyển hướng sang trang game chính (main.html)
                         window.location.href = "main.html";
                     }, 400);
+                }, 500);
 
-                }, 400);
-
-            }, 900);
+            }, 950);
         }
     </script>
 </body>

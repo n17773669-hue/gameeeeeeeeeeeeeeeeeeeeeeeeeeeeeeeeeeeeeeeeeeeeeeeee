@@ -161,6 +161,9 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:var(--f);color
 #loadgame{position:fixed;inset:0;z-index:400;background:radial-gradient(circle,#2a0806,#000 72%);display:none;flex-direction:column;align-items:center;justify-content:center;font:900 15px var(--f);letter-spacing:.35em;color:var(--g)}
 #loadgame.on{display:flex}
 #lb{width:min(60vw,460px);height:5px;background:rgba(255,255,255,.14);margin:22px 0 10px}#lb i{display:block;height:100%;width:100%;transform:scaleX(0);transform-origin:left;background:linear-gradient(90deg,#8a1208,#ff3b1f,#ffd36a)}
+#gamelayer{position:fixed;inset:0;z-index:40;opacity:0;transition:opacity 1s;background:#000}#gamelayer.on{opacity:1}
+#gamelayer iframe{width:100%;height:100%;border:0;display:block}
+.ingame #auth{opacity:0;pointer-events:none}
 @media(max-width:700px){#wrap{gap:20px}.card{padding:24px 18px}}
 </style>
 </head>
@@ -231,7 +234,8 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:var(--f);color
 
 <script>
 const CFG={
-  GAME_PAGE:"main.html",                  // trang game sau khi bấm XUẤT TRẬN
+  GAME_MODULE:"",                         // (nâng cao) file .js của game, export function start(container, Shell){...}
+  GAME_PAGE:"",                           // để trống = dùng sảnh có sẵn bên dưới. Có file game riêng thì điền vd "main.html"                  // trang game sau khi bấm XUẤT TRẬN
   TITLE:"CHIẾN TRƯỜNG VĨNH CỬU",
   TAGLINE:"HÀO KHÍ NGÀN NĂM",
   CHAR_IMG:"char.png",                    // ảnh nhân vật (đặt cùng thư mục). Không có ảnh thì hiện mặt trống đồng.
@@ -444,7 +448,32 @@ $('out').addEventListener('click',()=>{LS.del('sb_session');LS.del('sb_current')
 $('enter').addEventListener('click',()=>{
   SFX.go();lvl=1;$('loadgame').classList.add('on');const t0=performance.now(),D=2400,bar=Q('#lb i');
   const iv=setInterval(()=>{const p=Math.min(100,Math.round((performance.now()-t0)/D*100));bar.style.transform=`scaleX(${p/100})`;$('lp').textContent=p+'%';
-    if(p>=100){clearInterval(iv);$('flash').style.opacity=1;setTimeout(()=>location.href=CFG.GAME_PAGE,500)}},50)});
+    if(p>=100){clearInterval(iv);$('flash').style.opacity=1;setTimeout(launchGame,500)}},50)});
+
+/* ===== VÀO GAME NGAY TRONG TRANG (không tải lại, nhạc không đứt) ===== */
+let GL=null;
+async function launchGame(){
+  const R=$('root');GL=document.createElement('div');GL.id='gamelayer';R.appendChild(GL);
+  window.Shell={user:LS.get('sb_current'),ac,bus,master,SFX,cfg:CFG,exit:exitGame};   // game dùng được: Shell.user, Shell.SFX..., Shell.exit()
+  try{
+    if(CFG.GAME_MODULE){const m=await import(CFG.GAME_MODULE);await m.start(GL,window.Shell)}
+    else if(!CFG.GAME_PAGE)lobby(GL);
+    else await new Promise((ok,no)=>{const f=document.createElement('iframe');f.allow='autoplay;fullscreen';f.onload=ok;f.onerror=no;setTimeout(ok,8000);f.src=CFG.GAME_PAGE;GL.appendChild(f)});
+  }catch(e){console.error(e);GL.remove();GL=null;$('loadgame').classList.remove('on');$('flash').style.opacity=0;msg('Không tải được game, thử lại nhé');return}
+  R.classList.add('ingame');GL.classList.add('on');mus.gain.linearRampToValueAtTime(.3,ac.currentTime+1.5);
+  $('loadgame').classList.remove('on');$('flash').style.opacity=0}
+function lobby(L){                                     // sảnh có sẵn: chỗ này sau sẽ thay bằng game thật
+  L.innerHTML=`<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:18px;padding:0 6%;background:radial-gradient(ellipse at 50% 60%,rgba(120,20,8,.55),rgba(5,1,2,.92));color:#ecdcb8;font-family:var(--f)">
+    <div style="color:var(--g);letter-spacing:.4em;font-size:12px">◈ SẢNH CHIẾN TRƯỜNG</div>
+    <div style="font:900 clamp(26px,5vw,56px) var(--f);color:#fff3d6;text-shadow:0 0 16px var(--c)">Xin chào, <span id="lbName"></span></div>
+    <div style="max-width:520px;font-size:14px;line-height:1.8;color:#c9a560">Từ intro, đăng nhập đến sảnh này là một trang liền mạch, không tải lại, nhạc không đứt. Đây là chỗ sẽ đặt game của bạn.</div>
+    <button class="btn main" id="lbPlay" style="width:260px">⚔ BẮT ĐẦU CHIẾN DỊCH</button>
+    <button class="btn ghost" id="lbExit" style="width:260px">ĐĂNG XUẤT · VỀ CỔNG THÀNH</button></div>`;
+  L.querySelector('#lbName').textContent=(window.Shell.user||{}).name||'';
+  L.querySelector('#lbPlay').onclick=()=>{SFX.gong();lvl=1};
+  L.querySelector('#lbExit').onclick=()=>{LS.del('sb_session');LS.del('sb_current');$('viewProf').hidden=true;$('viewAuth').hidden=false;exitGame()}}
+function exitGame(){                                   // game gọi parent.Shell.exit() để quay về, cũng không tải lại
+  if(GL){GL.remove();GL=null}$('root').classList.remove('ingame');mus.gain.linearRampToValueAtTime(.7,ac.currentTime+1.5);lvl=.3}
 // đã đăng nhập từ lần trước: hiện hồ sơ ngay sau khi intro xong
 const saved=LS.get('sb_session');if(saved)showProfile(saved,true);
 </script>

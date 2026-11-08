@@ -32,6 +32,27 @@ body[data-v=lobby] #bg::before{opacity:0;transition:opacity .6s}
 .res svg,.ic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px;margin-right:6px}
 .res .c svg{color:#f0b955}.res .g svg{color:#a6d46a}.res .p svg{color:#ff8a6a}
 .ic{display:grid;place-items:center;color:var(--g)}.ic svg{width:20px;height:20px;margin:0}
+/* chiến đấu */
+.arena{position:absolute;inset:0}
+.hp{position:absolute;top:13vh;width:min(36vw,380px);z-index:4}.hp.me{left:4%}.hp.en{right:4%;text-align:right}
+.hp b{font-size:15px}.hp i{display:block;height:8px;margin:6px 0 3px;background:rgba(255,255,255,.12);transform:skewX(-20deg)}
+.hp u{display:block;height:100%;background:linear-gradient(90deg,#8a1208,#ff6a3a);transition:width .4s}.hp.en u{margin-left:auto;background:linear-gradient(90deg,#1c5a8a,#4ab8ff)}
+.hp span{font-size:11px;color:var(--dim)}.hp .kh{height:4px}.hp .kh u{background:linear-gradient(90deg,#8a5a12,#ffd36a)}
+.fgt{position:absolute;bottom:20vh;height:58vh;width:32vw;z-index:3;transition:transform .2s cubic-bezier(.2,.9,.2,1)}.fgt.me{left:10%}.fgt.en{right:10%}
+.fgt img,.fgt svg{width:100%;height:100%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 0 20px rgba(255,90,40,.4))}
+.fgt.en img,.fgt.en svg{transform:scaleX(-1);filter:hue-rotate(190deg) saturate(.85) brightness(.9) drop-shadow(0 0 20px rgba(60,160,255,.5))}
+.fgt.lgm{transform:translateX(20vw)}.fgt.lge{transform:translateX(-20vw)}
+.fgt.hit{animation:hs .3s}.fgt.hit img,.fgt.hit svg{filter:brightness(2.4) saturate(.2)!important}
+@keyframes hs{25%{margin-left:-14px}60%{margin-left:12px}}
+.shake{animation:ash .4s}@keyframes ash{20%{transform:translate(-9px,5px)}50%{transform:translate(8px,-5px)}80%{transform:translate(-4px,3px)}}
+.sl{position:absolute;left:-10%;right:-10%;top:42%;height:5px;background:linear-gradient(90deg,transparent,#fff,#ff5a2a,transparent);transform:rotate(-25deg) scaleX(0);animation:slh .3s forwards;pointer-events:none}
+@keyframes slh{40%{transform:rotate(-25deg) scaleX(1);opacity:1}to{transform:rotate(-25deg) scaleX(1.1);opacity:0}}
+.dn{position:fixed;z-index:20;font:800 34px var(--f);color:#fff;text-shadow:0 0 12px #ff3b1f,0 3px 0 #000;transform:translateX(-50%);pointer-events:none;animation:dn .9s ease-out forwards}.dn.h{font-size:54px;color:#ffd36a}
+@keyframes dn{to{transform:translate(-50%,-70px);opacity:0}}
+.blog{position:absolute;left:3%;bottom:5%;max-width:min(420px,44vw);padding:10px 16px;background:rgba(0,0,0,.55);border-left:3px solid var(--a);font-size:14px;line-height:1.5;z-index:5}
+.over{position:absolute;inset:0;z-index:8;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;background:rgba(0,0,0,.65)}.over[hidden]{display:none}
+.over b{font:800 clamp(34px,7vw,84px) var(--f);letter-spacing:.12em;color:#fff3d8;text-shadow:0 0 30px var(--r);margin-bottom:10px}.over .btn{width:240px}
+@media(max-width:760px){.fgt{height:40vh;width:44vw;bottom:26vh}.fgt.me{left:2%}.fgt.en{right:2%}.blog{display:none}}
 /* router */
 #app{position:fixed;inset:0;z-index:5}
 .view{position:absolute;inset:0;opacity:0;pointer-events:none;transform:scale(1.015);transition:opacity .45s,transform .45s;overflow:hidden}
@@ -150,6 +171,7 @@ const CFG={
   CHAR_IMG:"char.png",      // ảnh nhân vật
   BG_IMG:"bg.jpg",          // tranh nền sảnh (1920x1080, chừa trống bên trái cho nhân vật). Không có file thì dùng nền mặc định
        // PNG nền trong suốt, cao, nhân vật cắt ngang eo/đùi là đẹp nhất
+  ENEMY_IMG:"",             // ảnh địch (PNG trong suốt). Trống = dùng lại ảnh nhân vật, nhuộm xanh
   GAME_MODULE:"",           // vd "./campaign.js" -> export async function start(container, Shell){ return {pause(){},resume(){}} }
   API_URL:""                // trống = lưu tài khoản trong trình duyệt (thử nghiệm)
 };
@@ -318,7 +340,40 @@ const modeView=(title,mod)=>({
     if(mod&&CFG.GAME_MODULE){const slot=el.querySelector('.slot');slot.textContent='';slot.style.display='block';
       try{const m=await import(CFG.GAME_MODULE);this.ctl=await m.start(slot,Sh)}catch(e){console.error(e);slot.style.display='grid';slot.textContent='Không tải được chế độ này'}}},
   show(){this.ctl?.resume?.()},hide(){this.ctl?.pause?.()}});
-App.reg('campaign',modeView('Chiến dịch',true));
+const Battle=(()=>{let S,bonus=0;const rnd=(a,b)=>a+Math.random()*(b-a)|0,wait=ms=>new Promise(r=>setTimeout(r,ms));
+  const log=t=>{const e=$('blg');if(e)e.textContent=t};
+  const btns=on=>{document.querySelectorAll('#v-campaign [data-a]').forEach(b=>b.disabled=!on);if(on)Q('#v-campaign [data-a=spell]').disabled=S.ki<40};
+  const draw=()=>{$('bhm').style.width=S.hm/1.2+'%';$('bhe').style.width=S.he/1.4+'%';$('bkh').style.width=S.ki+'%';$('btm').textContent=S.hm+' / 120';$('bte').textContent=S.he+' / 140'};
+  SFX.hit=h=>{if(ac){tn(180,60,.25,h?.7:.45,'sawtooth');tn(900,200,.12,.2,'square')}};
+  function reset(){S={hm:120,he:140,ki:0,guard:false,heavy:false,busy:false,over:false};draw();log('Giặc Minh tràn tới ải Chi Lăng!');$('bov').hidden=true;btns(true)}
+  async function hit(from,to,dmg,heavy){const a=$('bf'+from),t=$('bf'+to),ar=$('bar');a.classList.add('lg'+from);SFX.hit(heavy);await wait(220);
+    t.classList.add('hit');const sl=document.createElement('i');sl.className='sl';t.appendChild(sl);
+    const r=t.getBoundingClientRect(),n=document.createElement('div');n.className='dn'+(heavy?' h':'');n.textContent='-'+dmg;n.style.left=r.left+r.width/2+'px';n.style.top=r.top+r.height*.3+'px';document.body.appendChild(n);setTimeout(()=>n.remove(),900);
+    if(heavy)ar.classList.add('shake');await wait(380);a.classList.remove('lg'+from);t.classList.remove('hit');sl.remove();ar.classList.remove('shake')}
+  function end(win){S.over=true;$('bovt').textContent=win?'THẮNG TRẬN':'THẤT BẠI';$('bov').hidden=false;win?SFX.ok():SFX.err()}
+  async function enemy(){
+    if(!S.heavy&&Math.random()<.3){S.heavy=true;log('Giặc Minh gồng sức... lượt sau sẽ ra đòn nặng!');S.busy=false;btns(true);return}
+    const h=S.heavy;let d=h?rnd(26,34):rnd(9,16);S.heavy=false;log(h?'Giặc Minh vung đao tối hậu!':'Giặc Minh chém tới.');
+    if(S.guard){d=Math.round(d*.4);S.guard=false;log('Thế thủ đỡ được phần lớn!')}
+    await hit('e','m',d,h);S.hm=Math.max(0,S.hm-d);S.ki=Math.min(100,S.ki+10);draw();
+    if(S.hm<=0)return end(false);S.busy=false;btns(true)}
+  async function act(k){if(!S||S.busy||S.over)return;S.busy=true;btns(false);let d=0;
+    if(k==='slash'){d=rnd(14,22)+bonus;S.ki=Math.min(100,S.ki+20);log('Ngài chém một nhát!');await hit('m','e',d)}
+    else if(k==='spell'){S.ki-=40;d=rnd(32,44)+bonus;log('Ấn Sao bùng nổ!');await hit('m','e',d,true)}
+    else{S.guard=true;S.ki=Math.min(100,S.ki+25);log('Ngài dựng thế thủ.');await wait(400)}
+    S.he=Math.max(0,S.he-d);draw();if(S.he<=0)return end(true);await wait(450);await enemy()}
+  const face=(id,src,fb)=>{const f=$(id);f.innerHTML=GEN;if(src){const im=new Image();im.alt='';im.onload=()=>{f.innerHTML='';f.appendChild(im)};im.src=src}};
+  return{mount(el){const u=Shell.user;bonus=Math.round((60+hsh(u.user||'x')%36)/12)-5;
+    el.innerHTML=`<div class="bar"><button class="back" data-go="lobby">‹ Sảnh</button><b>Chương 1 · Ải Chi Lăng</b></div>
+    <div class="arena" id="bar"><div class="hp me"><b id="bnm"></b><i><u id="bhm"></u></i><span id="btm"></span><i class="kh"><u id="bkh"></u></i></div>
+     <div class="hp en"><b>Giặc Minh</b><i><u id="bhe"></u></i><span id="bte"></span></div>
+     <div class="fgt me" id="bfm"></div><div class="fgt en" id="bfe"></div><div class="blog" id="blg"></div>
+     <div class="nav"><button class="btn pri" data-a="slash"><span>Chém<small>+20 khí</small></span></button><button class="btn" data-a="spell"><span>Ấn Sao<small>tốn 40 khí</small></span></button><button class="btn" data-a="guard"><span>Thủ<small>giảm sát thương</small></span></button></div>
+     <div class="over" id="bov" hidden><b id="bovt"></b><button class="btn pri" id="bagain" type="button"><span>Đánh lại</span></button><button class="btn" data-go="lobby"><span>Về sảnh</span></button></div></div>`;
+    $('bnm').textContent=u.name;face('bfm',CFG.CHAR_IMG);face('bfe',CFG.ENEMY_IMG||CFG.CHAR_IMG);
+    el.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{SFX.click();act(b.dataset.a)});$('bagain').onclick=()=>{SFX.click();reset()};reset()},
+   show(){if(S&&S.over)reset()}}})();
+App.reg('campaign',CFG.GAME_MODULE?modeView('Chiến dịch',true):Battle);
 App.reg('formation',modeView('Đội hình'));
 App.reg('city',modeView('Thành trì'));
 App.reg('treasury',modeView('Kho báu'));

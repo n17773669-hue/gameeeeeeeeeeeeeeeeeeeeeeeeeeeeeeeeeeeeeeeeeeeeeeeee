@@ -6,16 +6,16 @@
     <title>Limbus Style Intro Door</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #050505; overflow: hidden; height: 100vh; font-family: 'Segoe UI', sans-serif; }
+        body { background: #000; overflow: hidden; height: 100vh; font-family: sans-serif; }
 
-        /* MÀN HÌNH CHÓP SÁNG BÙNG NỔ */
+        /* MÀN HÌNH CHÓP SÁNG TRẮNG ĐIỆN ẢNH */
         #flash-light {
             position: absolute; width: 100%; height: 100%;
             background: #ffffff; opacity: 0; pointer-events: none;
-            z-index: 200; transition: opacity 0.4s ease-out;
+            z-index: 200; transition: opacity 0.3s ease-out;
         }
 
-        /* KHUNG CỬA CHÍNH */
+        /* KHUNG CỬA ĐÔI */
         .door-container {
             position: absolute; width: 100%; height: 100%;
             z-index: 100; display: flex; overflow: hidden;
@@ -23,61 +23,57 @@
 
         .door-left, .door-right {
             width: 50%; height: 100%;
-            background: linear-gradient(135deg, #18110e 0%, #080605 100%);
-            border-right: 4px solid #8b4513;
-            box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
-            transition: transform 1.2s cubic-bezier(0.7, 0, 0.1, 1);
+            background: linear-gradient(135deg, #0d0a09 0%, #030202 100%);
+            border-right: 5px solid #2a150b;
+            box-shadow: inset 0 0 120px rgba(0,0,0,0.95);
+            transition: transform 1.1s cubic-bezier(0.77, 0, 0.175, 1);
             position: relative;
         }
-        .door-right { 
-            border-right: none; 
-            border-left: 4px solid #8b4513; 
+        .door-right { border-right: none; border-left: 5px solid #2a150b; }
+
+        /* KHE SÁNG ĐỎ Ở GIỮA CỬA (GIỐNG LIMBUS) */
+        .door-container::after {
+            content: ''; position: absolute; left: 50%; top: 0; transform: translateX(-50%);
+            width: 4px; height: 100%; background: #ff2200;
+            box-shadow: 0 0 20px #ff2200, 0 0 40px #ff4400;
+            opacity: 0.6; z-index: 102; transition: opacity 0.5s;
         }
 
-        /* HỌA TIẾT KIM LOẠI TRÊN CỬA */
-        .door-pattern {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0, rgba(255,255,255,0.02) 2px, transparent 0, transparent 20px);
-        }
-
-        /* NÚT BÁNH RĂNG GỖ TO ĐÙNG HOÀNH TRÁNG */
+        /* NÚT BÁNH RĂNG GỖ & HIỆU ỨNG ĐỎ RỰC */
         .gear-wrapper {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 380px; height: 380px;
-            z-index: 101; cursor: pointer;
+            width: 400px; height: 400px;
+            z-index: 105; cursor: pointer;
+        }
+
+        /* VÒNG NĂNG LƯỢNG ĐỎ BÙNG NỔ */
+        .energy-ring {
+            position: absolute; top: -15px; left: -15px; right: -15px; bottom: -15px;
+            border-radius: 50%; border: 4px solid #ff1100;
+            opacity: 0; box-shadow: 0 0 40px #ff1100, inset 0 0 30px #ff3300;
+            transition: all 0.4s ease-in-out;
         }
 
         .gear-btn {
             width: 100%; height: 100%;
-            background: radial-gradient(circle, #4a2810 0%, #1a0d05 70%);
-            border: 10px solid #8b5a2b;
+            background: radial-gradient(circle, #3d2314 0%, #120703 80%);
+            border: 12px solid #5c3a21;
             border-radius: 50%;
             display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 0 60px rgba(212, 107, 8, 0.5), inset 0 0 40px #000;
-            transition: transform 1s cubic-bezier(0.5, 0, 0.2, 1), opacity 0.5s ease;
+            box-shadow: 0 0 50px rgba(255, 34, 0, 0.4), inset 0 0 50px #000;
+            transition: transform 0.9s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s;
         }
 
-        /* SVG BÁNH RĂNG CỔ ĐIỂN SẮC NÉT */
         .gear-svg {
-            width: 80%; height: 80%;
-            fill: #d7ccc8;
-            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.8));
+            width: 82%; height: 82%;
+            fill: #b0bec5;
+            filter: drop-shadow(0 8px 12px rgba(0,0,0,0.9));
         }
 
-        /* VIỀN NĂNG LƯỢNG PHÁT SÁNG KHI BẤM */
-        .glow-ring {
-            position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px;
-            border-radius: 50%; border: 3px solid #ff4500;
-            opacity: 0; box-shadow: 0 0 30px #ff4500;
-            transition: opacity 0.3s;
-        }
-
-        /* CLASS CHUYỂN ĐỘNG ANIMATION */
-        .gear-spin {
-            transform: rotate(1080deg) scale(1.15) !important;
-        }
-        .glow-active { opacity: 1 !important; }
+        /* CLASS ANIMATION KHI BẤM */
+        .active-spin { transform: rotate(1440deg) scale(1.1) !important; }
+        .active-glow { opacity: 1 !important; transform: scale(1.05); }
         .door-open-left { transform: translateX(-100%); }
         .door-open-right { transform: translateX(100%); }
         .fade-out { opacity: 0; pointer-events: none; }
@@ -88,14 +84,14 @@
     <div id="flash-light"></div>
 
     <div class="door-container">
-        <div class="door-left" id="door-l"><div class="door-pattern"></div></div>
-        <div class="door-right" id="door-r"><div class="door-pattern"></div></div>
+        <div class="door-left" id="door-l"></div>
+        <div class="door-right" id="door-r"></div>
         
-        <div class="gear-wrapper" onclick="startCinematicTransition()">
-            <div class="glow-ring" id="glow"></div>
-            <div class="gear-btn" id="gear-btn">
+        <div class="gear-wrapper" onclick="triggerIntro()">
+            <div class="energy-ring" id="ring"></div>
+            <div class="gear-btn" id="gear">
                 <svg class="gear-svg" viewBox="0 0 100 100">
-                    <path d="M50 32 A18 18 0 1 0 50 68 A18 18 0 1 0 50 32 M44 8 L56 8 L58 18 A32 32 0 0 1 68 22 L78 14 L86 22 L78 32 A32 32 0 0 1 82 42 L92 44 L92 56 L82 58 A32 32 0 0 1 78 68 L86 78 L78 86 L68 78 A32 32 0 0 1 58 82 L56 92 L44 92 L42 82 A32 32 0 0 1 32 78 L22 86 L14 78 L22 68 A32 32 0 0 1 18 58 L8 56 L8 44 L18 42 A32 32 0 0 1 22 32 L14 22 L22 14 L32 22 A32 32 0 0 1 42 18 Z"/>
+                    <path d="M50 30 A20 20 0 1 0 50 70 A20 20 0 1 0 50 30 M43 6 L57 6 L59 18 A34 34 0 0 1 70 22 L81 13 L90 22 L81 33 A34 34 0 0 1 86 43 L96 45 L96 55 L86 57 A34 34 0 0 1 81 67 L90 78 L81 87 L70 78 A34 34 0 0 1 59 82 L57 94 L43 94 L41 82 A34 34 0 0 1 30 78 L19 87 L10 78 L19 67 A34 34 0 0 1 14 57 L4 55 L4 45 L14 43 A34 34 0 0 1 19 33 L10 22 L19 13 L30 22 A34 34 0 0 1 41 18 Z"/>
                 </svg>
             </div>
         </div>
@@ -104,71 +100,85 @@
     <script>
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-        // Âm thanh bánh răng cơ khí ma sát gỗ & kim loại
-        function playGearAudio() {
-            for (let i = 0; i < 18; i++) {
+        // Âm thanh cơ khí gầm rú & tiếng máy nặng
+        function playHeavyGearSound() {
+            // Tiếng cộc cạch dồn dập
+            for (let i = 0; i < 22; i++) {
                 setTimeout(() => {
                     let osc = audioCtx.createOscillator();
                     let gain = audioCtx.createGain();
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(100 + (i * 12), audioCtx.currentTime);
-                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.06);
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(80 + (i * 15), audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.07);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
                     osc.start();
-                    osc.stop(audioCtx.currentTime + 0.06);
-                }, i * 45);
+                    osc.stop(audioCtx.currentTime + 0.07);
+                }, i * 38);
             }
+
+            // Tiếng gầm bass trầm khi nổ lực
+            let bass = audioCtx.createOscillator();
+            let bassGain = audioCtx.createGain();
+            bass.type = 'sawtooth';
+            bass.frequency.setValueAtTime(60, audioCtx.currentTime);
+            bass.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.9);
+            bassGain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            bassGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.9);
+            bass.connect(bassGain);
+            bassGain.connect(audioCtx.destination);
+            bass.start();
+            bass.stop(audioCtx.currentTime + 0.9);
         }
 
-        // Âm thanh cửa nặng mở ra
-        function playDoorAudio() {
+        // Âm thanh cửa thép khổng lồ mở toang
+        function playMassiveDoorSound() {
             let osc = audioCtx.createOscillator();
             let gain = audioCtx.createGain();
             osc.type = 'triangle';
-            osc.frequency.setValueAtTime(80, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 1.2);
-            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+            osc.frequency.setValueAtTime(90, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(15, audioCtx.currentTime + 1.3);
+            gain.gain.setValueAtTime(0.7, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.3);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
-            osc.stop(audioCtx.currentTime + 1.2);
+            osc.stop(audioCtx.currentTime + 1.3);
         }
 
-        function startCinematicTransition() {
+        function triggerIntro() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
 
-            const gear = document.getElementById('gear-btn');
-            const glow = document.getElementById('glow');
+            const gear = document.getElementById('gear');
+            const ring = document.getElementById('ring');
             const doorL = document.getElementById('door-l');
             const doorR = document.getElementById('door-r');
             const flash = document.getElementById('flash-light');
 
-            // 1. Kích hoạt âm thanh và quay bánh răng 3 vòng (1080 deg)
-            playGearAudio();
-            gear.classList.add('gear-spin');
-            glow.classList.add('glow-active');
+            // 1. Kích hoạt hiệu ứng sáng đỏ & xoay cuồng lực
+            playHeavyGearSound();
+            gear.classList.add('active-spin');
+            ring.classList.add('active-glow');
 
             setTimeout(() => {
-                // 2. Mở cửa & biến mất bánh răng
-                playDoorAudio();
+                // 2. Mở cửa & phát âm thanh cửa nặng
+                playMassiveDoorSound();
                 gear.parentElement.classList.add('fade-out');
                 doorL.classList.add('door-open-left');
                 doorR.classList.add('door-open-right');
 
-                // 3. Flash sáng hiệu ứng điện ảnh
+                // 3. Chớp sáng trắng điện ảnh
                 setTimeout(() => {
                     flash.style.opacity = '1';
 
-                    // 4. Nhảy sang giao diện game chính
+                    // 4. Chuyển sang main.html
                     setTimeout(() => {
                         window.location.href = "main.html";
-                    }, 400);
-                }, 500);
+                    }, 350);
+                }, 450);
 
-            }, 950);
+            }, 850);
         }
     </script>
 </body>

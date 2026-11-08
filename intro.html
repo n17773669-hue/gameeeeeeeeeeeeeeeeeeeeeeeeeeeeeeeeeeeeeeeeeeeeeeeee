@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Intro</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0b0c10; overflow: hidden; height: 100vh; font-family: Arial, sans-serif; }
+
+        /* LỚP ÁNH SÁNG TRẮNG */
+        #flash-light {
+            position: absolute; width: 100%; height: 100%;
+            background: #ffffff; opacity: 0; pointer-events: none;
+            z-index: 50; transition: opacity 0.5s ease-out;
+        }
+
+        /* KHUNG CỬA VÀ BÁNH RĂNG GỖ */
+        .door-container {
+            position: absolute; width: 100%; height: 100%;
+            z-index: 100; display: flex;
+        }
+
+        .door-left, .door-right {
+            width: 50%; height: 100%;
+            background: #12141d;
+            border-right: 2px solid #8B5A2B;
+            transition: transform 1.2s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        .door-right { border-right: none; border-left: 2px solid #8B5A2B; }
+
+        /* NÚT BÁNH RĂNG GỖ TO (Dựa theo ảnh bạn vẽ) */
+        .gear-btn {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 260px; height: 260px; /* Kích thước to đúng tầm khoanh đỏ */
+            background: #3e2723;
+            border: 8px solid #8d6e63;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 0 35px rgba(141, 110, 99, 0.6), inset 0 0 20px #1b0000;
+            z-index: 101;
+            transition: transform 1s ease, opacity 0.5s ease;
+        }
+
+        /* SVG Bánh răng gỗ */
+        .gear-svg {
+            width: 80%; height: 80%;
+            fill: #d7ccc8;
+            filter: drop-shadow(2px 4px 6px black);
+        }
+
+        /* ANIMATION XOAY & MỞ */
+        .gear-spin {
+            transform: translate(-50%, -50%) rotate(720deg) scale(1.15) !important;
+        }
+        .door-open-left { transform: translateX(-100%); }
+        .door-open-right { transform: translateX(100%); }
+        .fade-out { opacity: 0; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <div id="flash-light"></div>
+
+    <div class="door-container">
+        <div class="door-left" id="door-l"></div>
+        <div class="door-right" id="door-r"></div>
+        
+        <!-- Nút Bánh Răng Gỗ To -->
+        <button class="gear-btn" id="gear-btn" onclick="startTransition()">
+            <svg class="gear-svg" viewBox="0 0 100 100">
+                <!-- Bánh răng gỗ cổ điển 8 rãnh -->
+                <path d="M50 35 A15 15 0 1 0 50 65 A15 15 0 1 0 50 35 M44 10 L56 10 L58 20 A30 30 0 0 1 68 24 L77 16 L85 24 L78 33 A30 30 0 0 1 82 43 L92 45 L92 57 L82 59 A30 30 0 0 1 78 69 L85 78 L77 86 L68 78 A30 30 0 0 1 58 82 L56 92 L44 92 L42 82 A30 30 0 0 1 32 78 L23 86 L15 78 L22 69 A30 30 0 0 1 18 59 L8 57 L8 45 L18 43 A30 30 0 0 1 22 33 L15 24 L23 16 L32 24 A30 30 0 0 1 42 20 Z"/>
+            </svg>
+        </button>
+    </div>
+
+    <script>
+        // Tạo âm thanh giả lập tiếng bánh răng gỗ & tiếng mở cửa bằng Web Audio API
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playWoodGearSound() {
+            // Tiếng cộc cạch gỗ xoay
+            for (let i = 0; i < 12; i++) {
+                setTimeout(() => {
+                    let osc = audioCtx.createOscillator();
+                    let gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(120 + Math.random() * 40, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.08);
+                }, i * 70);
+            }
+        }
+
+        function playDoorOpenSound() {
+            // Tiếng cửa trượt phát ra âm trầm nặng
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(60, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 1.2);
+            gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.2);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 1.2);
+        }
+
+        function startTransition() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            const gear = document.getElementById('gear-btn');
+            const doorL = document.getElementById('door-l');
+            const doorR = document.getElementById('door-r');
+            const flash = document.getElementById('flash-light');
+
+            // Phát âm thanh bánh răng xoay
+            playWoodGearSound();
+            gear.classList.add('gear-spin');
+
+            setTimeout(() => {
+                // Mở cửa + âm thanh cửa nặng trượt
+                playDoorOpenSound();
+                gear.classList.add('fade-out');
+                doorL.classList.add('door-open-left');
+                doorR.classList.add('door-open-right');
+
+                setTimeout(() => {
+                    // Flash ánh sáng trắng
+                    flash.style.opacity = '1';
+
+                    setTimeout(() => {
+                        // Chuyển hướng sang trang game chính (main.html)
+                        window.location.href = "main.html";
+                    }, 400);
+
+                }, 400);
+
+            }, 900);
+        }
+    </script>
+</body>
+</html>

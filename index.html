@@ -18,8 +18,26 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:"Courier New",
   transform:scale(1);transition:transform 3.2s cubic-bezier(.3,0,.2,1)}
 #scene.push{transform:scale(1.5)}
 #scene video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
-#title{color:#fff;font-size:clamp(22px,4.6vw,60px);letter-spacing:.25em;text-align:center;padding:0 5%;text-shadow:0 0 30px var(--c);opacity:0;transition:opacity 1.2s 1.4s}
-#scene.push #title{opacity:1}
+/* tiêu đề nằm ngoài lớp camera nên không bị phóng to / tràn */
+#titlebox{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;pointer-events:none}
+#title{color:#fff;font-size:clamp(20px,5vw,64px);letter-spacing:.1em;line-height:1.3;text-align:center;
+  max-width:88vw;text-shadow:0 0 30px var(--c),0 0 60px var(--c);opacity:0;transform:scale(.9);
+  transition:opacity 1.2s 1.6s,transform 1.6s 1.6s}
+#titlebox.show #title{opacity:1;transform:scale(1)}
+
+/* ký hiệu khoa học trôi lơ lửng */
+.fl{position:absolute;color:rgba(190,245,255,.55);text-shadow:0 0 12px var(--c);font-weight:bold;
+  animation:floaty linear infinite}
+@keyframes floaty{from{transform:translateY(0) rotate(0)}to{transform:translateY(-110vh) rotate(40deg)}}
+
+/* drone bay lượn */
+#drone{position:absolute;left:62%;top:22%;width:clamp(90px,14vw,170px);opacity:0;transition:opacity 1s 1.2s;
+  animation:fly 7s ease-in-out infinite alternate;filter:drop-shadow(0 0 14px var(--c))}
+#scene.push #drone{opacity:1}
+@keyframes fly{0%{transform:translate(0,0) rotate(-4deg)}50%{transform:translate(-14vw,6vh) rotate(5deg)}100%{transform:translate(8vw,-4vh) rotate(-3deg)}}
+.prop{transform-box:fill-box;transform-origin:center;animation:prop .1s infinite alternate}
+@keyframes prop{from{transform:scaleX(1)}to{transform:scaleX(.35)}}
+.thr{animation:blink .5s infinite}
 
 /* ===== CỬA KIM LOẠI ===== */
 #stage{position:absolute;inset:0;display:flex;z-index:10;pointer-events:none}
@@ -85,8 +103,19 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:"Courier New",
 
   <div id="scene">
     <video id="cutscene" playsinline></video>
-    <h1 id="title">CHIẾN TRƯỜNG KHOA HỌC</h1>
+    <div id="floaters"></div>
+    <svg id="drone" viewBox="0 0 120 80">
+      <ellipse class="thr" cx="60" cy="70" rx="14" ry="5" fill="#19e3ff" opacity=".7"/>
+      <rect x="22" y="30" width="76" height="5" rx="2" fill="#2d3a43"/>
+      <ellipse class="prop" cx="18" cy="26" rx="16" ry="3" fill="#bff6ff"/>
+      <ellipse class="prop" cx="102" cy="26" rx="16" ry="3" fill="#bff6ff"/>
+      <ellipse cx="60" cy="44" rx="30" ry="20" fill="#1d2a33" stroke="#19e3ff" stroke-width="2"/>
+      <circle cx="60" cy="44" r="12" fill="#031016" stroke="#19e3ff" stroke-width="1.5"/>
+      <circle cx="60" cy="44" r="5" fill="#19e3ff"/>
+      <rect x="34" y="52" width="10" height="3" rx="1" fill="#ffb020"/><rect x="76" y="52" width="10" height="3" rx="1" fill="#ffb020"/>
+    </svg>
   </div>
+  <div id="titlebox"><h1 id="title">CHIẾN TRƯỜNG KHOA HỌC</h1></div>
 
   <div id="stage">
     <div class="door l"><div class="panel a"><i class="led"></i></div><div class="panel b"><i class="led"></i></div></div>
@@ -155,6 +184,19 @@ function sparks(){for(let i=0;i<50;i++)P.push({x:innerWidth/2,y:innerHeight/2,
     cx.beginPath();cx.arc(p.x,p.y,p.r,0,7);cx.fill()});
   P=P.filter(p=>p.l>0);requestAnimationFrame(loop)})();
 
+/* ===== KÝ HIỆU KHOA HỌC BAY LƠ LỬNG ===== */
+const SYM=["H₂O","E=mc²","Δ","π","⚛","CO₂","λ","Σ","DNA","∞","Fe","NaCl","√","Ω"];
+for(let i=0;i<26;i++){
+  const s=document.createElement('span');s.className='fl';
+  s.textContent=SYM[i%SYM.length];
+  s.style.left=Math.random()*96+'%';s.style.top=(60+Math.random()*50)+'%';
+  s.style.fontSize=(14+Math.random()*30)+'px';
+  s.style.animationDuration=(10+Math.random()*16)+'s';
+  s.style.animationDelay=(-Math.random()*20)+'s';
+  s.style.opacity=.25+Math.random()*.6;
+  document.getElementById('floaters').appendChild(s);
+}
+
 /* ===== KỊCH BẢN ===== */
 const $=id=>document.getElementById(id);
 let started=false;
@@ -184,7 +226,7 @@ function start(){
   },2100);
   setTimeout(()=>{
     S('servo');S('hiss');
-    $('stage').classList.add('stage-open');$('scene').classList.add('push');
+    $('stage').classList.add('stage-open');$('scene').classList.add('push');$('titlebox').classList.add('show');
     steam();setTimeout(steam,500);
     if(CUTSCENE){const v=$('cutscene');v.src=CUTSCENE;v.style.display='block';v.play().catch(()=>{})}
   },2400);
